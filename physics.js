@@ -26,6 +26,31 @@ var physics = (function() {
     return Math.sqrt(this.x * this.x + this.y * this.y);
   };
 
+  Vec2.add = function(a, b) {
+    return new Vec2(a.x + b.x, a.y + b.y);
+  };
+
+  Vec2.sub = function(a, b) {
+    return new Vec2(a.x - b.x, a.y - b.y);
+  };
+
+  Vec2.scale = function(v, s) {
+    return new Vec2(v.x * s, v.y * s);
+  };
+
+  Vec2.len = function(v) {
+    return Math.sqrt(Vec2.len2(v));
+  };
+
+  Vec2.len2 = function(v) {
+    return v.x * v.x + v.y * v.y;
+  };
+
+  Vec2.normalized = function(v) {
+    var scale = 1 / Vec2.len(v);
+    return new Vec2(scale * v.x, scale * v.y);
+  };
+
 
   /**
    * A two-by-two matrix.
@@ -66,27 +91,6 @@ var physics = (function() {
 
 
   /**
-   * A two-dimensional body.
-   * @param shape {Shape} The shape of this body
-   * @param mass {number} The mass of this body
-   * @constructor
-   */
-  function Body(shape, mass) {
-    this.shape = shape
-    this.mass = mass;
-
-    this.position = Vec2(0, 0);
-    this.lastPosition = Vec2(0, 0);
-    this.rotation = 0;
-    this.velocity = Vec2(0, 0);
-    this.angular_velocity = Vec2(0, 0);
-    this.force = Vec2(0, 0);
-    this.torque = 0;
-    this.surface_friction = 0.2;
-  }
-
-
-  /**
    * A rectangle.
    * @constructor
    */
@@ -94,6 +98,8 @@ var physics = (function() {
     this.size = Vec2(width, height);
     this.bounds = new BoundingBox(this.size.len(), this.size.len());
   }
+
+  Box.TYPE = 'BOX';
 
   /**
    * @param position {Vec2} The position of the box
@@ -118,7 +124,10 @@ var physics = (function() {
   function Circle(radius) {
     this.radius = radius;
     this.bounds = new BoundingBox(radius * 2, radius * 2);
+    this.type = Circle.TYPE;
   }
+
+  Circle.TYPE = 'Circle';
 
 
   /**
@@ -135,14 +144,140 @@ var physics = (function() {
   /**
    * @return {boolean} If this bounding box touches another
    */
-  BoundingBox.prototype.touches = function(x, y, other, ox, oy) {
+  BoundingBox.prototype.touches = function(pos, other, opos) {
     var totalWidth = (this.width + other.width) / 2;
     var totalHeight = (this.height + other.height) / 2;
 
-    var dx = Math.abs((x + this.offsetx) - (ox + other.offsetx));
-    var dy = Math.abs((y + this.offsety) - (oy + other.offsety));
+    var dx = Math.abs((pos.x + this.offsetx) - (opos.x + other.offsetx));
+    var dy = Math.abs((pos.y + this.offsety) - (opos.y + other.offsety));
 
     return (totalWidth > dx) && (totalHeight > dy);
   };
 
+
+  /**
+   * A two-dimensional body.
+   * @param shape {Shape} The shape of this body (e.g., Box)
+   * @param mass {number} The mass of this body
+   * @constructor
+   */
+  function Body(shape, mass) {
+    this.shape = shape
+    this.mass = mass;
+
+    this.position = new Vec2(0, 0);
+    this.lastPosition = new Vec2(0, 0);
+    this.rotation = 0;
+    this.velocity = new Vec2(0, 0);
+    this.angular_velocity = new Vec2(0, 0);
+    this.force = new Vec2(0, 0);
+    this.torque = 0;
+    this.surface_friction = 0.2;
+  }
+
+
+  /**
+   * Describes a point of contact between two bodies.
+   * @constructor
+   */
+  function Contact(separation, position, normal) {
+    this.separation = separation;
+    this.position = position;
+    this.normal = normal;
+  }
+
+
+  /**
+   * Calculates the collision contacts between two circles.
+   */
+  function collideCircleCircle(a, b) {
+    var offset = Vec2.sub(b.position, a.position);
+    var totalRadius = a.shape.radius + b.shape.radius;
+
+    // Check for a collision
+    if (totalRadius * totalRadius < Vec2.len2(offset)) {
+      return [];
+    };
+
+    // Find the collision location
+    var normal = Vec2.normalized(offset);
+    var separation = totalRadius - Vec2.len(offset);
+    var point = Vec2.scale(normal, a.shape.radius);
+
+    return [ new Contact(separation, point, normal) ];
+  }
+
+  /**
+   * Calculates the collision contacts between two boxes.
+   */
+  function collideBoxBox(a, b) {
+    return []
+  }
+
+  /**
+   * Calculates the collision contacts between a box and a circle.
+   */
+  function collideBoxCircle(a, b) {
+    return []
+  }
+
+  /**
+   * Swaps the arguments of a collision function.
+   */
+  function reverseCollision(collideFn) {
+    return function(a, b) {
+      var contacts = collideFn(b, a);
+      for (var i = 0; i < contacts.length; i++) {
+        contacts[i].normal = Vec2.scale(contacts[i].normal, -1);
+      }
+      return contacts;
+    }
+  }
+
+  /**
+   * @return {function} A collision function to use for the two bodies
+   */
+  function getCollisionFunction(a, b) {
+    var aShape = Object.getPrototypeOf(a).constructor;
+    var bShape = Object.getPrototypeOf(b).constructor;
+    if (aShape === Box) {
+      if (bShape === Box) {
+        return collideBoxBox;
+      } else if (bShape === Circle) {
+        return collideBoxCircle;
+      }
+    } else if (aShape === Circle) {
+      if (bShape === Circle) {
+        return collideCircleCircle;
+      } else if (bShape === Box) {
+        return reverseCollision(collideBoxCircle);
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Checks for collision between two bodies.
+   * @param a {Body} the first body
+   * @param b {Body} the second body
+   * @return {Array.<Contact>} the list of contact points between the two bodies
+   */
+  function collide(a, b) {
+    // Bail early if the bounding boxes do not intersect
+    if (!a.shape.bounds.touches(a.position, b.shape.bounds, b.position)) {
+      return [];
+    }
+
+    // Otherwise look up an appropriate collision function
+    var collideFn = getCollisionFunction(a.shape, b.shape);
+    return collideFn(a, b);
+  }
+
+
+  return {
+    Box: Box,
+    Circle: Circle,
+    Body: Body,
+    collide: collide
+  };
 })();

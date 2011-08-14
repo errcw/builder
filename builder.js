@@ -24,6 +24,14 @@ var builder = (function() {
     // Work around http://bugs.jquery.com/ticket/9678
     setInterval(function() { }, 24*60*60*1000);
 
+    //TODO
+    var ca = new physics.Circle(1);
+    var cb = new physics.Circle(2);
+    var ba = new physics.Body(ca, 10);
+    var bb = new physics.Body(cb, 20);
+    var c = physics.collide(ba, bb);
+    alert(c);
+
     setInterval(function() {
       game.update(frameTimeInSeconds);
       game.draw(context);
