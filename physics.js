@@ -38,6 +38,10 @@ var physics = (function() {
     return new Vec2(v.x * s, v.y * s);
   };
 
+  Vec2.dot = function(a, b) {
+    return a.x * b.x + a.y * b.y;
+  };
+
   Vec2.len = function(v) {
     return Math.sqrt(Vec2.len2(v));
   };
@@ -92,14 +96,14 @@ var physics = (function() {
 
   /**
    * A rectangle.
+   * @param width {number} The width of this box
+   * @param height {number} The height of this box
    * @constructor
    */
   function Box(width, height) {
     this.size = Vec2(width, height);
     this.bounds = new BoundingBox(this.size.len(), this.size.len());
   }
-
-  Box.TYPE = 'BOX';
 
   /**
    * @param position {Vec2} The position of the box
@@ -119,6 +123,7 @@ var physics = (function() {
 
   /**
    * A circle.
+   * @param radius {number} The radius of this circle
    * @constructor
    */
   function Circle(radius) {
@@ -127,7 +132,48 @@ var physics = (function() {
     this.type = Circle.TYPE;
   }
 
-  Circle.TYPE = 'Circle';
+
+  /**
+   * A line segment.
+   * @param start {Vec2} The start of this line segment
+   * @param end {Vec2} The end of this line segment
+   * @constructor
+   */
+  function Line(start, end) {
+    this.start = start;
+    this.end = end;
+    this.vec = Vec2.sub(this.end, this.start);
+  }
+
+  Line.prototype.len2 = function() {
+    return Vec2.len2(this.vec);
+  };
+
+  /**
+   * @return {number} The minimum distance squared between this line and the given point
+   */
+  Line.prototype.distanceToPoint2 = function(point) {
+    var closest = this.getClosestPoint(point);
+    var toClosest = Vec2.sub(closest, point);
+    return Vec2.len2(toClosest);
+  };
+
+  /**
+   * @return {Vec2} The closest point on this line to the given point
+   */
+  Line.prototype.getClosestPoint = function(point) {
+    var toPoint = Vec2.sub(point, this.start);
+
+    var dp = Vec2.dot(toPoint, this.vec);
+    var t = dp / this.len2();
+    if (t < 0) {
+      t = 0;
+    } else if (t > 1) {
+      t = 1;
+    }
+
+    return this.start + Vec2.scale(this.vec, t);
+  };
 
 
   /**
@@ -190,9 +236,9 @@ var physics = (function() {
   /**
    * Calculates the collision contacts between two circles.
    */
-  function collideCircleCircle(a, b) {
-    var offset = Vec2.sub(b.position, a.position);
-    var totalRadius = a.shape.radius + b.shape.radius;
+  function collideCircleCircle(circleA, circleB) {
+    var offset = Vec2.sub(circleB.position, circleA.position);
+    var totalRadius = circleA.shape.radius + circleB.shape.radius;
 
     // Check for a collision
     if (totalRadius * totalRadius < Vec2.len2(offset)) {
@@ -202,24 +248,54 @@ var physics = (function() {
     // Find the collision location
     var normal = Vec2.normalized(offset);
     var separation = totalRadius - Vec2.len(offset);
-    var point = Vec2.scale(normal, a.shape.radius);
+    var point = Vec2.scale(normal, circleA.shape.radius);
 
     return [ new Contact(separation, point, normal) ];
   }
 
   /**
-   * Calculates the collision contacts between two boxes.
+   * Calculates the collision contacts between a box and a circle.
    */
-  function collideBoxBox(a, b) {
-    return []
+  function collideBoxCircle(box, circle) {
+    var r2 = circle.shape.radius * circle.shape.radius;
+
+    // Represent the box as line segments
+    var pts = box.shape.getPoints(boxBody.position, boxBody.rotation);
+    var lines = [
+      new Line(pts[0], pts[1]),
+      new Line(pts[1], pts[2]),
+      new Line(pts[2], pts[3]),
+      new Line(pts[3], pts[0]) ];
+
+    // Find the side of the box closest to the circle also intersecting it
+    var closest = null;
+    var closest_distance2 = Number.MAX_VALUE;
+    for (var i = 0; i < lines.length; i++) {
+      var d2 = lines[i].distanceToPoint2(circleBody.position);
+      if (d2 < r2 && d2 < closest_distance2) {
+        closest = lines[i];
+        closest_distance2 = d2;
+      }
+    }
+
+    // Find the collision location
+    if (closest != null) {
+      var separation = Math.sqrt(closest_distance2) - circle.shape.radius;
+      var point = closest.getClosestPoint(circleBody.position);
+      var normal = Vec2.normalized(Vec2.sub(circleBody.position, point));
+      return [ new Contact(separation, point, normal) ]
+    } else {
+      return [];
+    }
   }
 
   /**
-   * Calculates the collision contacts between a box and a circle.
+   * Calculates the collision contacts between two boxes.
    */
-  function collideBoxCircle(a, b) {
+  function collideBoxBox(boxA, boxB) {
     return []
   }
+
 
   /**
    * Swaps the arguments of a collision function.
