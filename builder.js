@@ -24,13 +24,18 @@ var builder = (function() {
     // Work around http://bugs.jquery.com/ticket/9678
     setInterval(function() { }, 24*60*60*1000);
 
-    //TODO
-    var ca = new physics.Circle(1);
-    var cb = new physics.Circle(2);
-    var ba = new physics.Body(ca, 10);
-    var bb = new physics.Body(cb, 20);
-    var c = physics.collide(ba, bb);
-    alert(c);
+    var ba = new physics.Body(new physics.Circle(10), 10);
+    ba.position = new physics.Vec2(120, 20);
+    var bb = new physics.Body(new physics.Circle(25), 20);
+    bb.position = new physics.Vec2(40, 50);
+    var bc = new physics.Body(new physics.Box(30, 30), 20);
+    bc.position = new physics.Vec2(30, 80);
+
+    this.views = [
+        new CircleView(ba),
+        new CircleView(bb),
+        new BoxView(bc)
+    ];
 
     setInterval(function() {
       game.update(frameTimeInSeconds);
@@ -53,12 +58,54 @@ var builder = (function() {
    * @param ctx {object} The cavnas context to which to draw
    */
   Builder.prototype.draw = function(ctx) {
+    // Draw the background and border
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, Builder.WIDTH, Builder.HEIGHT);
-
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 5;
     ctx.strokeRect(0, 0, Builder.WIDTH, Builder.HEIGHT);
+
+    // Draw the bodies
+    for (var i = 0; i < this.views.length; i++) {
+      this.views[i].draw(ctx);
+    }
+  };
+
+
+  /**
+   * Displays a body with a Box shape.
+   * @constructor
+   */
+  function BoxView(body) {
+    this.body = body;
+  };
+
+  BoxView.prototype.draw = function(ctx) {
+    ctx.strokeStyle = '#000';
+    ctx.fillStyle = '#eee';
+    ctx.lineWidth = 3;
+    ctx.fillRect(this.body.position.x, this.body.position.y, this.body.shape.size.x, this.body.shape.size.y);
+    ctx.strokeRect(this.body.position.x, this.body.position.y, this.body.shape.size.x, this.body.shape.size.y);
+  };
+
+
+  /**
+   * Displays a body with a Circle shape.
+   * @constructor
+   */
+  function CircleView(body) {
+    this.body = body;
+  };
+
+  CircleView.prototype.draw = function(ctx) {
+    ctx.strokeStyle = '#000';
+    ctx.fillStyle = '#eee';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(this.body.position.x, this.body.position.y, this.body.shape.radius, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
   };
 
 

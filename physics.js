@@ -101,8 +101,8 @@ var physics = (function() {
    * @constructor
    */
   function Box(width, height) {
-    this.size = Vec2(width, height);
-    this.bounds = new BoundingBox(this.size.len(), this.size.len());
+    this.size = new Vec2(width, height);
+    this.bounds = new BoundingBox(Vec2.len(this.size), Vec2.len(this.size));
   }
 
   /**
@@ -351,6 +351,7 @@ var physics = (function() {
 
 
   return {
+    Vec2: Vec2,
     Box: Box,
     Circle: Circle,
     Body: Body,
