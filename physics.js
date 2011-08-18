@@ -12,34 +12,29 @@ var physics = (function() {
     this.y = y;
   }
 
-  Vec2.prototype.add = function(other) {
-    this.x += other.x;
-    this.y += other.y;
-  };
-
-  Vec2.prototype.sub = function(other) {
-    this.x -= other.x;
-    this.y -= other.y;
-  };
-
-  Vec2.prototype.len = function() {
-    return Math.sqrt(this.x * this.x + this.y * this.y);
+  Vec2.of = function(x, y) {
+    return new Vec2(x, y);
   };
 
   Vec2.add = function(a, b) {
-    return new Vec2(a.x + b.x, a.y + b.y);
+    return Vec2.of(a.x + b.x, a.y + b.y);
   };
 
   Vec2.sub = function(a, b) {
-    return new Vec2(a.x - b.x, a.y - b.y);
+    return Vec2.of(a.x - b.x, a.y - b.y);
   };
 
   Vec2.scale = function(v, s) {
-    return new Vec2(v.x * s, v.y * s);
+    return Vec2.of(v.x * s, v.y * s);
   };
 
   Vec2.dot = function(a, b) {
     return a.x * b.x + a.y * b.y;
+  };
+
+  Vec2.normalize = function(v) {
+    var scale = 1 / Vec2.len(v);
+    return Vec2.of(scale * v.x, scale * v.y);
   };
 
   Vec2.len = function(v) {
@@ -50,47 +45,35 @@ var physics = (function() {
     return v.x * v.x + v.y * v.y;
   };
 
-  Vec2.normalized = function(v) {
-    var scale = 1 / Vec2.len(v);
-    return new Vec2(scale * v.x, scale * v.y);
-  };
-
 
   /**
    * A two-by-two matrix.
    * @constructor
    */
-  function Mat2(e11, e12, e21, e22) {
+  function Mat22(e11, e12, e21, e22) {
     this.e11 = e11;
     this.e12 = e12;
     this.e21 = e21;
     this.e22 = e22;
   }
 
-  /**
-   * @param vec2 {Vec2} The vector to multiply
-   * @return {Vec2} The vector result
-   */
-  Mat2.prototype.mul = function(vec2) {
-    return new Vec2(
-        this.e11 * vec2.x + this.e12 * vec2.y,
-        this.e21 * vec2.x + this.e22 * vec2.y);
+  Mat22.of = function(e11, e12, e21, e22) {
+    return new Mat22(e11, e12, e21, e22);
+  };
+
+  Mat22.mul = function(mat2, vec2) {
+    return Vec2.of(
+        mat2.e11 * vec2.x + mat2.e12 * vec2.y,
+        mat2.e21 * vec2.x + mat2.e22 * vec2.y);
   };
 
   /**
-   * @return {Mat2} A copy of this matrix
+   * @return {Mat22} A matrix representing the given angle in radians
    */
-  Mat2.prototype.clone = function() {
-    return new Mat2(this.e11, this.e12, this.e21, this.e22);
-  };
-
-  /**
-   * @return {Mat2} A matrix representing the given angle in radians
-   */
-  Mat2.forRotation = function(angle) {
+  Mat22.forRotation = function(angle) {
     var c = Math.cos(angle);
     var s = Math.sin(angle);
-    return new Mat22(c, -s, s, c);
+    return Mat22(c, -s, s, c);
   };
 
 
@@ -101,7 +84,7 @@ var physics = (function() {
    * @constructor
    */
   function Box(width, height) {
-    this.size = new Vec2(width, height);
+    this.size = Vec2.of(width, height);
     this.bounds = new BoundingBox(Vec2.len(this.size), Vec2.len(this.size));
   }
 
@@ -111,13 +94,13 @@ var physics = (function() {
    * @return {Array.<Vec2>} The four corners of this box
    */
   Box.prototype.getPoints = function(position, rotation) {
-    var r = Mat2.forRotation(rotation);
+    var r = Mat22.forRotation(rotation);
     var hx = this.size.x * 0.5;
     var hy = this.size.y * 0.5;
-    return [ r.clone().mul(new Vec2(-h.x, -h.y)).add(position),
-             r.clone().mul(new Vec2(h.x, -h.y)).add(position),
-             r.clone().mul(new Vec2(h.x, h.y)).add(position),
-             r.cloen().mul(new Vec2(-h.x, h.y)).add(position) ];
+    return [ Vec2.add(Mat22.mul(r, Vec2.of(-h.x, -h.y)), position),
+             Vec2.add(Mat22.mul(r, Vec2.of(h.x, -h.y)), position),
+             Vec2.add(Mat22.mul(r, Vec2.of(h.x, h.y)), position),
+             Vec2.add(Mat22.mul(r, Vec2.of(-h.x, h.y)), position) ];
   };
 
 
@@ -211,12 +194,12 @@ var physics = (function() {
     this.shape = shape
     this.mass = mass;
 
-    this.position = new Vec2(0, 0);
-    this.lastPosition = new Vec2(0, 0);
+    this.position = Vec2.of(0, 0);
+    this.lastPosition = Vec2.of(0, 0);
     this.rotation = 0;
-    this.velocity = new Vec2(0, 0);
-    this.angular_velocity = new Vec2(0, 0);
-    this.force = new Vec2(0, 0);
+    this.velocity = Vec2.of(0, 0);
+    this.angular_velocity = Vec2.of(0, 0);
+    this.force = Vec2.of(0, 0);
     this.torque = 0;
     this.surface_friction = 0.2;
   }
@@ -246,7 +229,7 @@ var physics = (function() {
     };
 
     // Find the collision location
-    var normal = Vec2.normalized(offset);
+    var normal = Vec2.normalize(offset);
     var separation = totalRadius - Vec2.len(offset);
     var point = Vec2.scale(normal, circleA.shape.radius);
 
@@ -282,7 +265,7 @@ var physics = (function() {
     if (closest != null) {
       var separation = Math.sqrt(closest_distance2) - circle.shape.radius;
       var point = closest.getClosestPoint(circleBody.position);
-      var normal = Vec2.normalized(Vec2.sub(circleBody.position, point));
+      var normal = Vec2.normalize(Vec2.sub(circleBody.position, point));
       return [ new Contact(separation, point, normal) ]
     } else {
       return [];
