@@ -209,10 +209,11 @@ var physics = (function() {
    * Describes a point of contact between two bodies.
    * @constructor
    */
-  function Contact(separation, position, normal) {
+  function Contact(separation, position, normal, opt_id) {
     this.separation = separation;
     this.position = position;
     this.normal = normal;
+    this.id = opt_id;
   }
 
 
@@ -278,7 +279,6 @@ var physics = (function() {
   function collideBoxBox(boxA, boxB) {
     return []
   }
-
 
   /**
    * Swaps the arguments of a collision function.

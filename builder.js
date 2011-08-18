@@ -30,6 +30,7 @@ var builder = (function() {
     bb.position = new physics.Vec2(80, 35);
     var bc = new physics.Body(new physics.Box(30, 30), 20);
     bc.position = new physics.Vec2(30, 80);
+    bc.rotation = 0.1;
 
     this.bodies = [ba, bb, bc];
 
@@ -93,21 +94,21 @@ var builder = (function() {
   };
 
   BoxView.prototype.draw = function(ctx) {
+    var width = this.body.shape.size.x;
+    var height = this.body.shape.size.y;
+
+    ctx.save();
+
     ctx.strokeStyle = this.collided ? '#ff0000' : '#000';
     ctx.fillStyle = '#eee';
     ctx.lineWidth = 3;
-    var halfWidth = this.body.shape.size.x / 2;
-    var halfHeight = this.body.shape.size.y / 2;
-    ctx.fillRect(
-        this.body.position.x - halfWidth,
-        this.body.position.y - halfHeight,
-        this.body.shape.size.x,
-        this.body.shape.size.y);
-    ctx.strokeRect(
-        this.body.position.x - halfWidth,
-        this.body.position.y - halfHeight,
-        this.body.shape.size.x,
-        this.body.shape.size.y);
+
+    ctx.translate(this.body.position.x, this.body.position.y);
+    ctx.rotate(-this.body.rotation); // convert to clockwise rotation
+    ctx.fillRect(-width / 2, -height / 2, width, height);
+    ctx.strokeRect(-width / 2, -height / 2, width, height);
+
+    ctx.restore();
   };
 
 
