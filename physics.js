@@ -61,10 +61,10 @@ var physics = (function() {
     return new Mat22(e11, e12, e21, e22);
   };
 
-  Mat22.mul = function(mat2, vec2) {
+  Mat22.mul = function(mat22, vec2) {
     return Vec2.of(
-        mat2.e11 * vec2.x + mat2.e12 * vec2.y,
-        mat2.e21 * vec2.x + mat2.e22 * vec2.y);
+        mat22.e11 * vec2.x + mat22.e12 * vec2.y,
+        mat22.e21 * vec2.x + mat22.e22 * vec2.y);
   };
 
   /**
@@ -73,7 +73,7 @@ var physics = (function() {
   Mat22.forRotation = function(angle) {
     var c = Math.cos(angle);
     var s = Math.sin(angle);
-    return Mat22(c, -s, s, c);
+    return Mat22.of(c, -s, s, c);
   };
 
 
@@ -97,10 +97,10 @@ var physics = (function() {
     var r = Mat22.forRotation(rotation);
     var hx = this.size.x * 0.5;
     var hy = this.size.y * 0.5;
-    return [ Vec2.add(Mat22.mul(r, Vec2.of(-h.x, -h.y)), position),
-             Vec2.add(Mat22.mul(r, Vec2.of(h.x, -h.y)), position),
-             Vec2.add(Mat22.mul(r, Vec2.of(h.x, h.y)), position),
-             Vec2.add(Mat22.mul(r, Vec2.of(-h.x, h.y)), position) ];
+    return [ Vec2.add(Mat22.mul(r, Vec2.of(-hx, -hy)), position),
+             Vec2.add(Mat22.mul(r, Vec2.of(hx, -hy)), position),
+             Vec2.add(Mat22.mul(r, Vec2.of(hx, hy)), position),
+             Vec2.add(Mat22.mul(r, Vec2.of(-hx, hy)), position) ];
   };
 
 
@@ -155,7 +155,7 @@ var physics = (function() {
       t = 1;
     }
 
-    return this.start + Vec2.scale(this.vec, t);
+    return Vec2.add(this.start, Vec2.scale(this.vec, t));
   };
 
 
@@ -239,11 +239,11 @@ var physics = (function() {
   /**
    * Calculates the collision contacts between a box and a circle.
    */
-  function collideBoxCircle(box, circle) {
-    var r2 = circle.shape.radius * circle.shape.radius;
+  function collideBoxCircle(boxBody, circleBody) {
+    var r2 = circleBody.shape.radius * circleBody.shape.radius;
 
     // Represent the box as line segments
-    var pts = box.shape.getPoints(boxBody.position, boxBody.rotation);
+    var pts = boxBody.shape.getPoints(boxBody.position, boxBody.rotation);
     var lines = [
       new Line(pts[0], pts[1]),
       new Line(pts[1], pts[2]),
@@ -263,7 +263,7 @@ var physics = (function() {
 
     // Find the collision location
     if (closest != null) {
-      var separation = Math.sqrt(closest_distance2) - circle.shape.radius;
+      var separation = Math.sqrt(closest_distance2) - circleBody.shape.radius;
       var point = closest.getClosestPoint(circleBody.position);
       var normal = Vec2.normalize(Vec2.sub(circleBody.position, point));
       return [ new Contact(separation, point, normal) ]
@@ -335,6 +335,7 @@ var physics = (function() {
 
   return {
     Vec2: Vec2,
+    Mat22: Mat22,
     Box: Box,
     Circle: Circle,
     Body: Body,

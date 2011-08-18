@@ -27,15 +27,22 @@ var builder = (function() {
     var ba = new physics.Body(new physics.Circle(10), 10);
     ba.position = new physics.Vec2(120, 20);
     var bb = new physics.Body(new physics.Circle(25), 20);
-    bb.position = new physics.Vec2(40, 50);
+    bb.position = new physics.Vec2(40, 60);
     var bc = new physics.Body(new physics.Box(30, 30), 20);
     bc.position = new physics.Vec2(30, 80);
 
-    this.views = [
-        new CircleView(ba),
-        new CircleView(bb),
-        new BoxView(bc)
-    ];
+    this.bodies = [ba, bb, bc];
+    this.views = [new CircleView(ba), new CircleView(bb), new BoxView(bc)];
+
+    for (var i = 0; i < this.bodies.length; i++) {
+      for (var j = i + 1; j < this.bodies.length; j++) {
+        var contacts = physics.collide(this.bodies[i], this.bodies[j]);
+        if (contacts.length > 0) {
+          this.views[i].collided = true;
+          this.views[j].collided = true;
+        }
+      }
+    }
 
     setInterval(function() {
       game.update(frameTimeInSeconds);
@@ -78,14 +85,25 @@ var builder = (function() {
    */
   function BoxView(body) {
     this.body = body;
+    this.collided = false;
   };
 
   BoxView.prototype.draw = function(ctx) {
-    ctx.strokeStyle = '#000';
+    ctx.strokeStyle = this.collided ? '#ff0000' : '#000';
     ctx.fillStyle = '#eee';
     ctx.lineWidth = 3;
-    ctx.fillRect(this.body.position.x, this.body.position.y, this.body.shape.size.x, this.body.shape.size.y);
-    ctx.strokeRect(this.body.position.x, this.body.position.y, this.body.shape.size.x, this.body.shape.size.y);
+    var halfWidth = this.body.shape.size.x / 2;
+    var halfHeight = this.body.shape.size.y / 2;
+    ctx.fillRect(
+        this.body.position.x - halfWidth,
+        this.body.position.y - halfHeight,
+        this.body.shape.size.x,
+        this.body.shape.size.y);
+    ctx.strokeRect(
+        this.body.position.x - halfWidth,
+        this.body.position.y - halfHeight,
+        this.body.shape.size.x,
+        this.body.shape.size.y);
   };
 
 
@@ -95,10 +113,11 @@ var builder = (function() {
    */
   function CircleView(body) {
     this.body = body;
+    this.collided = false;
   };
 
   CircleView.prototype.draw = function(ctx) {
-    ctx.strokeStyle = '#000';
+    ctx.strokeStyle = this.collided ? '#ff0000' : '#000';
     ctx.fillStyle = '#eee';
     ctx.lineWidth = 3;
     ctx.beginPath();
