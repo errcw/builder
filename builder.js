@@ -27,12 +27,16 @@ var builder = (function() {
     var ba = new physics.Body(new physics.Circle(10), 10);
     ba.position = new physics.Vec2(120, 20);
     var bb = new physics.Body(new physics.Circle(25), 20);
-    bb.position = new physics.Vec2(40, 60);
+    bb.position = new physics.Vec2(80, 35);
     var bc = new physics.Body(new physics.Box(30, 30), 20);
     bc.position = new physics.Vec2(30, 80);
 
     this.bodies = [ba, bb, bc];
-    this.views = [new CircleView(ba), new CircleView(bb), new BoxView(bc)];
+
+    this.views = [];
+    for (var i = 0; i < this.bodies.length; i++) {
+      this.views.push(createView(this.bodies[i]));
+    }
 
     for (var i = 0; i < this.bodies.length; i++) {
       for (var j = i + 1; j < this.bodies.length; j++) {
@@ -127,6 +131,20 @@ var builder = (function() {
     ctx.stroke();
   };
 
+  /**
+   * Creates a view for the given body.
+   * @param body {Body} The body to view
+   * @return {object} A view for the body
+   */
+  function createView(body) {
+    var shape = Object.getPrototypeOf(body.shape).constructor;
+    if (shape === physics.Box) {
+      return new BoxView(body);
+    } else if (shape === physics.Circle) {
+      return new CircleView(body);
+    }
+    return null;
+  }
 
   /**
    * @return {boolean} If the browser supports the functionality we need.
