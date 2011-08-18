@@ -37,6 +37,10 @@ var physics = (function() {
     return Vec2.of(scale * v.x, scale * v.y);
   };
 
+  Vec2.abs = function(v) {
+    return Vec2.of(Math.abs(v.x), Math.abs(v.y));
+  };
+
   Vec2.len = function(v) {
     return Math.sqrt(Vec2.len2(v));
   };
@@ -61,10 +65,26 @@ var physics = (function() {
     return new Mat22(e11, e12, e21, e22);
   };
 
-  Mat22.mul = function(mat22, vec2) {
+  Mat22.mulVec = function(m, v) {
     return Vec2.of(
-        mat22.e11 * vec2.x + mat22.e12 * vec2.y,
-        mat22.e21 * vec2.x + mat22.e22 * vec2.y);
+        m.e11 * v.x + m.e12 * v.y,
+        m.e21 * v.x + m.e22 * v.y);
+  };
+
+  Mat22.mulMat = function(m1, m2) {
+    return Mat22.of(
+        m1.e11 * m2.e11 + m1.e12 * m2.e21,
+        m1.e11 * m2.e21 + m1.e12 * m2.e22,
+        m1.e21 * m2.e11 + m1.e22 * m2.e21,
+        m1.e21 * m2.e12 + m1.e22 * m2.e22);
+  }
+
+  Mat22.transpose = function(mat22) {
+    return Mat22.of(mat22.e11, mat22.e21, mat22.e12, mat22.e22);
+  };
+
+  Mat22.abs = function(m) {
+    return Mat22.of(Math.abs(m.e11), Math.abs(m.e12), Math.abs(m.e21), Math.abs(m.e22));
   };
 
   /**
@@ -97,10 +117,10 @@ var physics = (function() {
     var r = Mat22.forRotation(rotation);
     var hx = this.size.x * 0.5;
     var hy = this.size.y * 0.5;
-    return [ Vec2.add(Mat22.mul(r, Vec2.of(-hx, -hy)), position),
-             Vec2.add(Mat22.mul(r, Vec2.of(hx, -hy)), position),
-             Vec2.add(Mat22.mul(r, Vec2.of(hx, hy)), position),
-             Vec2.add(Mat22.mul(r, Vec2.of(-hx, hy)), position) ];
+    return [ Vec2.add(Mat22.mulVec(r, Vec2.of(-hx, -hy)), position),
+             Vec2.add(Mat22.mulVec(r, Vec2.of(hx, -hy)), position),
+             Vec2.add(Mat22.mulVec(r, Vec2.of(hx, hy)), position),
+             Vec2.add(Mat22.mulVec(r, Vec2.of(-hx, hy)), position) ];
   };
 
 
@@ -277,6 +297,95 @@ var physics = (function() {
    * Calculates the collision contacts between two boxes.
    */
   function collideBoxBox(boxA, boxB) {
+    // Separating axes
+    var SeparatingAxes = {
+        FACE_A_X: 1,
+        FACE_A_Y: 2,
+        FACE_B_X: 3,
+        FACE_B_Y: 4
+    };
+
+    // Collision tolerances
+    var REL_TOL = 0.95;
+    var ABS_TOL = 0.01;
+
+    // Identifies box-box contact by the intersecting edges
+    function EdgePair(inEdge1, inEdge2, outEdge1, outEdge2) {
+      this.inEdge1 = inEdge1;
+      this.inEdge2 = inEdge2;
+      this.outEdge1 = outEdge1;
+      this.outEdge2 = outEdge2;
+    }
+
+    EdgePair.EDGE1 = 1;
+    EdgePair.EDGE2 = 2;
+    EdgePair.EDGE3 = 3;
+    EdgePair.EDGE4 = 4;
+
+    EdgePair.prototype.swap = function() {
+      var tIn = this.inEdge1;
+      this.inEdge1 = this.inEdge2;
+      this.inEdge2 = tIn;
+
+      var tOut = this.outEdge1;
+      this.outEdge1 = this.outEdge2;
+      this.outEdge2 = tOut;
+    };
+
+    EdgePair.prototype.equals = function(other) {
+      return this.inEdge1 == other.inEdge1
+          && this.inEdge2 == other.inEdge2
+          && this.outEdge1 == other.outEdge1
+          && this.outEdge2 == other.outEdge2;
+    };
+
+    // Contains a clip vertex (v) and edge pair (ep);
+    function ClipVertex() {
+      this.v = null;
+      this.ep = null;
+    }
+
+    function computeIncidentEdge(h, pos, rot, normal) {
+    }
+
+    function clipSegmentToLine(v, normal, offset, clipEdge) {
+    }
+
+    var ha = Vec2.scale(boxA.shape.size, 0.5);
+    var hb = Vec2.scale(boxB.shape.size, 0.5);
+
+    var posa = boxA.position;
+    var posb = boxB.position;
+
+    var rota = Mat22.forRotation(boxA.rotation);
+    var rotb = Mat22.forRotation(boxB.rotation);
+
+    var rotat = Mat22.transpose(rota); // equivalent to inverse
+    var rotbt = Mat22.transpose(rotb);
+
+    var dp = Vec2.sub(posb, posa);
+    var da = Mat22.mulVec(rotat, dp); // dp with A axis aligned
+    var db = Mat22.mulVec(rotbt, dp);
+
+    var c = Mat22.mulMat(rotat, rotb); // transform B size vector with A axis aligned
+    var absc = Mat22.abs(c);
+    var absct = Mat22.transpose(absc);
+
+    // Box A faces: abs(da) - ha - absc * hb
+    // abs(da) - ha: vector from edge of A to B
+    // absc * hb: size of B projected on A's axes (A axis aligned)
+    // distance > size => separating axis
+    var facea = Vec2.sub(Vec2.sub(Vec2.abs(da), ha), Mat22.mulVec(absc, hb));
+    if (facea.x > 0 || facea.y > 0) {
+      return []
+    }
+
+    // Box B faces: abs(db) - absct * ha - hb
+    var faceb = Vec2.sub(Vec2.sub(Vec2.abs(db), Mat22.mulVec(absct, ha)), hb);
+    if (faceb.x > 0 || faceb.y > 0) {
+      return []
+    }
+
     return []
   }
 

@@ -25,14 +25,17 @@ var builder = (function() {
     setInterval(function() { }, 24*60*60*1000);
 
     var ba = new physics.Body(new physics.Circle(10), 10);
-    ba.position = new physics.Vec2(120, 20);
+    ba.position = physics.Vec2.of(120, 20);
     var bb = new physics.Body(new physics.Circle(25), 20);
-    bb.position = new physics.Vec2(80, 35);
+    bb.position = physics.Vec2.of(80, 35);
     var bc = new physics.Body(new physics.Box(30, 30), 20);
-    bc.position = new physics.Vec2(30, 80);
+    bc.position = physics.Vec2.of(30, 80);
     bc.rotation = 0.1;
+    var bd = new physics.Body(new physics.Box(20, 20), 30);
+    bd.position = physics.Vec2.of(40, 75);
+    bd.rotation = -0.2;
 
-    this.bodies = [ba, bb, bc];
+    this.bodies = [ba, bb, bc, bd];
 
     this.views = [];
     for (var i = 0; i < this.bodies.length; i++) {
