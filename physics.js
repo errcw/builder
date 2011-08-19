@@ -41,6 +41,10 @@ var physics = (function() {
     return Vec2.of(Math.abs(v.x), Math.abs(v.y));
   };
 
+  Vec2.neg = function(v) {
+    return Vec2.of(-v.x, -v.y);
+  };
+
   Vec2.len = function(v) {
     return Math.sqrt(Vec2.len2(v));
   };
@@ -298,7 +302,7 @@ var physics = (function() {
    */
   function collideBoxBox(boxA, boxB) {
     // Separating axes
-    var SeparatingAxes = {
+    var SeparatingAxis = {
         FACE_A_X: 1,
         FACE_A_Y: 2,
         FACE_B_X: 3,
@@ -384,6 +388,23 @@ var physics = (function() {
     var faceb = Vec2.sub(Vec2.sub(Vec2.abs(db), Mat22.mulVec(absct, ha)), hb);
     if (faceb.x > 0 || faceb.y > 0) {
       return []
+    }
+
+    // Find best axis (minimum penetration)
+    var axis = SeparatingAxis.FACE_A_X;
+    var separation = facea.x;
+    var normal = Vec2.of(rota.e11, rota.e21);
+    if (da.x <= 0) {
+      normal = Vec2.neg(normal);
+    }
+
+    if (facea.y > Vec2.add(Vec2.scale(separation, REL_TOL), Vec2.scale(ha.y, ABS_TOL))) {
+      axis = SeparatingAxis.FACE_A_Y;
+      separation = facea.y;
+      normal = Vec2.of(rota.e12, rota.e22);
+      if (da.y <= 0) {
+        normal = Vec2.neg(normal);
+      }
     }
 
     return []
