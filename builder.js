@@ -42,15 +42,42 @@ var builder = (function() {
       this.views.push(createView(this.bodies[i]));
     }
 
-    for (var i = 0; i < this.bodies.length; i++) {
-      for (var j = i + 1; j < this.bodies.length; j++) {
-        var contacts = physics.collide(this.bodies[i], this.bodies[j]);
+    this.pointer = new physics.Body(new physics.Box(1, 1), 1);
+    canvas.mousedown(function(e) {
+      game.pointer.position = physics.Vec2.of(e.offsetX, e.offsetY);
+
+      // Check for selection of an existing body
+      for (var i = 0; i < game.bodies.length; i++) {
+        var contacts = physics.collide(game.bodies[i], game.pointer);
         if (contacts.length > 0) {
-          this.views[i].collided = true;
-          this.views[j].collided = true;
+          game.views[i].collided = true;
+          return;
         }
       }
-    }
+
+      // Otherwise start creating a new body
+      game.newBody = new physics.Body(new physics.Box(1, 1), 10);
+      game.newBody.position = physics.Vec2.of(e.offsetX, e.offsetY);
+      game.newBody.rotation = 0;
+      game.views.push(createView(game.newBody));
+    });
+    canvas.mousemove(function(e) {
+      if (game.newBody != null) {
+        var sizeX = Math.abs(e.offsetX - game.newBody.position.x);
+        var sizeY = Math.abs(e.offsetY - game.newBody.position.y);
+        game.newBody.shape.setSize(sizeX, sizeY);
+      }
+    });
+    canvas.mouseup(function(e) {
+      for (var i = 0; i < game.bodies.length; i++) {
+        game.views[i].collided = false;
+      }
+
+      if (game.newBody != null) {
+        game.bodies.push(game.newBody);
+      }
+      game.newBody = null;
+    });
 
     setInterval(function() {
       game.update(frameTimeInSeconds);

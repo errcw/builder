@@ -108,9 +108,17 @@ var physics = (function() {
    * @constructor
    */
   function Box(width, height) {
+    this.setSize(width, height);
+  }
+
+  /**
+   * @param width {number} The new width of this box
+   * @param height {number} The new height of this box
+   */
+  Box.prototype.setSize = function(width, height) {
     this.size = Vec2.of(width, height);
     this.bounds = new BoundingBox(Vec2.len(this.size), Vec2.len(this.size));
-  }
+  };
 
   /**
    * @param position {Vec2} The position of the box
