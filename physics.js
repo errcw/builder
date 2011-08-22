@@ -350,11 +350,77 @@ var physics = (function() {
     }
 
     function computeIncidentEdge(h, pos, rot, normal) {
-      return null;
+      // Normal from reference box; convert to incident box's frame, flip sign
+      var n = Vec2.neg(Mat22.mulVec(Mat22.transpose(rot), normal));
+      var c0 = new ClipVertex();
+      var c1 = new ClipVertex();
+
+      if (Math.abs(n.x) > Math.abs(n.y)) {
+        if (n.x > 0) {
+          c0.v = Vec2.of(h.x, -h.y);
+          c0.ep = new EdgePair(0, EdgePair.EDGE3, 0, EdgePair.EDGE4);
+          c1.v = Vec2.of(h.x, h.y);
+          c1.ep = new EdgePair(0, EdgePair.EDGE4, 0, EdgePair.EDGE1);
+        } else {
+          c0.v = Vec2.of(-h.x, h.y);
+          c0.ep = new EdgePair(0, EdgePair.EDGE1, 0, EdgePair.EDGE2);
+          c1.v = Vec2.of(-h.x, -h.y);
+          c1.ep = new EdgePair(0, EdgePair.EDGE2, 0, EdgePair.EDGE3);
+        }
+      } else {
+        if (n.y > 0) {
+          c0.v = Vec2.of(h.x, h.y);
+          c0.ep = new EdgePair(0, EdgePair.EDGE4, 0, EdgePair.EDGE1);
+          c1.v = Vec2.of(-h.x, h.y);
+          c1.ep = new EdgePair(0, EdgePair.EDGE1, 0, EdgePair.EDGE2);
+        } else {
+          c0.v = Vec2.of(-h.x, -h.y);
+          c0.ep = new EdgePair(0, EdgePair.EDGE2, 0, EdgePair.EDGE3);
+          c1.v = Vec2.of(h.x, -h.y);
+          c1.ep = new EdgePair(0, EdgePair.EDGE3, 0, EdgePair.EDGE4);
+        }
+      }
+
+      c0.v = Vec2.add(pos, Mat22.mulVec(rot, c0.v));
+      c1.v = Vec2.add(pos, Mat22.mulVec(rot, c1.v));
+
+      return [c0, c1];
     }
 
     function clipSegmentToLine(v, normal, offset, clipEdge) {
-      return [];
+      var vout = [];
+
+      // Calculate the distance of the end points to the line
+      var distance0 = Vec2.dot(normal, v[0].v) - offset;
+      var distance1 = Vec2.dot(normal, v[1].v) - offset;
+
+      // If the points are behind the plane
+      if (distance0 <= 0) {
+        vout.push(v[0]);
+      }
+      if (distance1 <= 0) {
+        vout.push(v[1]);
+      }
+
+      // If the points are on different sides of the plane
+      if (distance0 * distance1 < 0) {
+        // Find the intersection point of the edge and the plane
+        var interp = distance0 / (distance0 - distance1);
+        var vp = new ClipVertex();
+        vp.v = Vec2.add(v[0].v, Vec2.scale(Vec2.sub(v[1].v, v[0].v), interp));
+        if (distance0 > 0) {
+          vp.ep = v[0].ep;
+          vp.ep.inEdge1 = clipEdge;
+          vp.ep.inEdge2 = 0;
+        } else {
+          vp.ep = v[1].ep;
+          vp.ep.outEdge1 = clipEdge;
+          vp.ep.outEdge2 = 0;
+        }
+        vout.append(vp);
+      }
+
+      return vout;
     }
 
     var ha = Vec2.scale(boxA.shape.size, 0.5);
@@ -435,11 +501,11 @@ var physics = (function() {
     switch (axis) {
       case SeparatingAxis.FACE_A_X:
         frontNormal = normal;
-        front = Vec2.add(Vec2.dot(posa, frontNormal), ha.x);
+        front = Vec2.dot(posa, frontNormal) + ha.x;
         sideNormal = Vec2.of(rota.e12, rota.e22);
         side = Vec2.dot(posa, sideNormal);
-        negSide = Vec2.add(Vec2.neg(side), ha.y);
-        posSide = Vec2.add(side, ha.y);
+        negSide = -side + ha.y;
+        posSide = side + ha.y;
         negEdge = EdgePair.EDGE3;
         posEdge = EdgePair.EDGE1;
         incident = computeIncidentEdge(hb, posb, rotb, frontNormal);
@@ -447,11 +513,11 @@ var physics = (function() {
 
       case SeparatingAxis.FACE_A_Y:
         frontNormal = normal;
-        front = Vec2.add(Vec2.dot(posa, frontNormal), ha.y);
+        front = Vec2.dot(posa, frontNormal) + ha.y;
         sideNormal = Vec2.of(rota.e11, rota.e21);
         side = Vec2.dot(posa, sideNormal);
-        negSide = Vec2.add(Vec2.neg(side), ha.x);
-        posSide = Vec2.add(side, ha.x);
+        negSide = -side + ha.x;
+        posSide = side + ha.x;
         negEdge = EdgePair.EDGE2;
         posEdge = EdgePair.EDGE4;
         incident = computeIncidentEdge(hb, posb, rotb, frontNormal);
@@ -459,11 +525,11 @@ var physics = (function() {
 
       case SeparatingAxis.FACE_B_X:
         frontNormal = Vec2.neg(normal);
-        front = Vec2.add(Vec2.dot(posb, frontNormal), hb.x);
+        front = Vec2.dot(posb, frontNormal) + hb.x;
         sideNormal = Vec2.of(rotb.e12, rotb.e22);
         side = Vec2.dot(posb, sideNormal);
-        negSide = Vec2.add(Vec2.neg(side), hb.y);
-        posSide = Vec2.add(side, hb.y);
+        negSide = -side + hb.y;
+        posSide = side + hb.y;
         negEdge = EdgePair.EDGE3;
         posEdge = EdgePair.EDGE1;
         incident = computeIncidentEdge(ha, posa, rota, frontNormal);
@@ -471,11 +537,11 @@ var physics = (function() {
 
       case SeparatingAxis.FACE_B_Y:
         frontNormal = Vec2.neg(normal);
-        front = Vec2.add(Vec2.dot(posb, frontNormal), hb.y);
+        front = Vec2.dot(posb, frontNormal) + hb.y;
         sideNormal = Vec2.of(rotb.e11, rotb.e21);
         side = Vec2.dot(posb, sideNormal);
-        negSide = Vec2.add(Vec2.neg(side), hb.x);
-        posSide = Vec2.add(side, hb.x);
+        negSide = -side + hb.x;
+        posSide = side + hb.x;
         negEdge = EdgePair.EDGE2;
         posEdge = EdgePair.EDGE4;
         incident = computeIncidentEdge(ha, posa, rota, frontNormal);
@@ -498,7 +564,7 @@ var physics = (function() {
     var contacts = [];
     for (var i = 0; i < c2.length; i++) {
       var c = c2[i];
-      var separation = Vec2.sub(Vec2.dot(frontNormal, c.v), front);
+      var separation = Vec2.dot(frontNormal, c.v) - front;
       if (separation <= 0) {
         var position = Vec2.sub(c.v, Vec2.scale(frontNormal, separation));
         var contact = new Contact(separation, position, normal, c.ep);
