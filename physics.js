@@ -350,9 +350,11 @@ var physics = (function() {
     }
 
     function computeIncidentEdge(h, pos, rot, normal) {
+      return null;
     }
 
     function clipSegmentToLine(v, normal, offset, clipEdge) {
+      return [];
     }
 
     var ha = Vec2.scale(boxA.shape.size, 0.5);
@@ -398,6 +400,7 @@ var physics = (function() {
       normal = Vec2.neg(normal);
     }
 
+    // facea.y > REL_TOL * separation + ABS_TOL * ha.y
     if (facea.y > Vec2.add(Vec2.scale(separation, REL_TOL), Vec2.scale(ha.y, ABS_TOL))) {
       axis = SeparatingAxis.FACE_A_Y;
       separation = facea.y;
@@ -407,7 +410,106 @@ var physics = (function() {
       }
     }
 
-    return []
+    // faceb.x > REL_TOL * separation + ABS_TOL * hb.x
+    if (faceb.x > Vec2.add(Vec2.scale(separation, REL_TOL), Vec2.scale(hb.x, ABS_TOL))) {
+      axis = SeparatingAxis.FACE_B_X;
+      separation = faceb.x;
+      normal = Vec2.of(rotb.e11, rotb.e21);
+      if (db.x <= 0) {
+        normal = Vec2.neg(normal);
+      }
+    }
+
+    // faceb.y > REL_TOL * separation + ABS_TOL * hb.y
+    if (faceb.y > Vec2.add(Vec2.scale(separation, REL_TOL), Vec2.scale(hb.y, ABS_TOL))) {
+      axis = SeparatingAxis.FACE_B_Y;
+      separation = faceb.y;
+      normal = Vec2.of(rotb.e12, rotb.e22);
+      if (db.y <= 0) {
+        normal = Vec2.neg(normal);
+      }
+    }
+
+    // Compute clipping lines
+    var frontNormal, front, sideNormal, side, negSide, posSide, negEdge, posEdge, incident;
+    switch (axis) {
+      case SeparatingAxis.FACE_A_X:
+        frontNormal = normal;
+        front = Vec2.add(Vec2.dot(posa, frontNormal), ha.x);
+        sideNormal = Vec2.of(rota.e12, rota.e22);
+        side = Vec2.dot(posa, sideNormal);
+        negSide = Vec2.add(Vec2.neg(side), ha.y);
+        posSide = Vec2.add(side, ha.y);
+        negEdge = EdgePair.EDGE3;
+        posEdge = EdgePair.EDGE1;
+        incident = computeIncidentEdge(hb, posb, rotb, frontNormal);
+        break;
+
+      case SeparatingAxis.FACE_A_Y:
+        frontNormal = normal;
+        front = Vec2.add(Vec2.dot(posa, frontNormal), ha.y);
+        sideNormal = Vec2.of(rota.e11, rota.e21);
+        side = Vec2.dot(posa, sideNormal);
+        negSide = Vec2.add(Vec2.neg(side), ha.x);
+        posSide = Vec2.add(side, ha.x);
+        negEdge = EdgePair.EDGE2;
+        posEdge = EdgePair.EDGE4;
+        incident = computeIncidentEdge(hb, posb, rotb, frontNormal);
+        break;
+
+      case SeparatingAxis.FACE_B_X:
+        frontNormal = Vec2.neg(normal);
+        front = Vec2.add(Vec2.dot(posb, frontNormal), hb.x);
+        sideNormal = Vec2.of(rotb.e12, rotb.e22);
+        side = Vec2.dot(posb, sideNormal);
+        negSide = Vec2.add(Vec2.neg(side), hb.y);
+        posSide = Vec2.add(side, hb.y);
+        negEdge = EdgePair.EDGE3;
+        posEdge = EdgePair.EDGE1;
+        incident = computeIncidentEdge(ha, posa, rota, frontNormal);
+        break;
+
+      case SeparatingAxis.FACE_B_Y:
+        frontNormal = Vec2.neg(normal);
+        front = Vec2.add(Vec2.dot(posb, frontNormal), hb.y);
+        sideNormal = Vec2.of(rotb.e11, rotb.e21);
+        side = Vec2.dot(posb, sideNormal);
+        negSide = Vec2.add(Vec2.neg(side), hb.x);
+        posSide = Vec2.add(side, hb.x);
+        negEdge = EdgePair.EDGE2;
+        posEdge = EdgePair.EDGE4;
+        incident = computeIncidentEdge(ha, posa, rota, frontNormal);
+        break;
+    }
+
+    // Clip to box side 1
+    var c1 = clipSegmentToLine(incident, Vec2.neg(sideNormal), negSide, negEdge);
+    if (c1.length < 2) {
+      return [];
+    }
+
+    // Clip to negative box side 1; c2 contains clipping points
+    var c2 = clipSegmentToLine(c1, sideNormal, posSide, posEdge);
+    if (c2.length < 2) {
+      return [];
+    }
+
+    // Calculate the contacts
+    var contacts = [];
+    for (var i = 0; i < c2.length; i++) {
+      var c = c2[i];
+      var separation = Vec2.sub(Vec2.dot(frontNormal, c.v), front);
+      if (separation <= 0) {
+        var position = Vec2.sub(c.v, Vec2.scale(frontNormal, separation));
+        var contact = new Contact(separation, position, normal, c.ep);
+        if (axis === SeparatingAxis.FACE_B_X || axis === SeparatingAxis.FACE_B_Y) {
+          contact.id.swap();
+        }
+        contacts.push(contact);
+      }
+    }
+
+    return contacts;
   }
 
   /**
