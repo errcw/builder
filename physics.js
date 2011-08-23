@@ -641,6 +641,28 @@ var physics = (function() {
 
 
   /**
+   * Manages the collision between two bodies.
+   * @constructor
+   */
+  function Arbiter(body1, body2, contacts) {
+    this.body1 = body1;
+    this.body2 = body2;
+    this.contacts = contacts;
+  }
+
+  Arbiter.prototype.preStep = function(invDt) {
+  };
+
+  Arbiter.prototype.applyImpulse = function() {
+  };
+
+  Arbiter.setContacts = function(contacts) {
+    //TODO
+    this.contacts = contacts;
+  };
+
+
+  /**
    * Physical interaction for a set of bodies.
    * @constructor
    */
@@ -715,6 +737,7 @@ var physics = (function() {
   };
 
   World.prototype.removeBody(body) {
+    //TODO
   };
 
   World.prototype.addJoint(joint) {
@@ -722,9 +745,11 @@ var physics = (function() {
   };
 
   World.prototype.removeJoint(joint) {
+    //TODO
   };
 
   World.prototype.broadPhase(dt) {
+    //TODO
   };
 
   return {
