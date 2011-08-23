@@ -425,7 +425,7 @@ var physics = (function() {
           vp.ep.outEdge1 = clipEdge;
           vp.ep.outEdge2 = 0;
         }
-        vout.append(vp);
+        vout.push(vp);
       }
 
       return vout;
