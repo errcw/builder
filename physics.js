@@ -225,12 +225,13 @@ var physics = (function() {
   function Body(shape, mass) {
     this.shape = shape
     this.mass = mass;
+    this.inverseMass = this.mass > 0 ? 1 / this.mass : 0;
 
     this.position = Vec2.of(0, 0);
     this.lastPosition = Vec2.of(0, 0);
     this.rotation = 0;
     this.velocity = Vec2.of(0, 0);
-    this.angular_velocity = Vec2.of(0, 0);
+    this.angularVelocity = Vec2.of(0, 0);
     this.force = Vec2.of(0, 0);
     this.torque = 0;
     this.surface_friction = 0.2;
@@ -245,7 +246,7 @@ var physics = (function() {
     this.separation = separation;
     this.position = position;
     this.normal = normal;
-    this.id = opt_id;
+    this.id = opt_id || null;
   }
 
 
@@ -638,6 +639,93 @@ var physics = (function() {
     return collideFn(a, b);
   }
 
+
+  /**
+   * Physical interaction for a set of bodies.
+   * @constructor
+   */
+  function World() {
+    this.bodies = [];
+    this.arbiters = [];
+    this.joints = [];
+    this.gravity = Vec2.of(0, -10);
+  }
+
+  /**
+   * Number of impluse iterations to apply each update step.
+   * @const
+   */
+  World.ITERATIONS = 5;
+
+  /**
+   * Updates this world for the given time step.
+   * @param dt {number} The time since the last update, in seconds
+   */
+  World.prototype.update = function(dt) {
+    // Broad phase collision detection
+    this.broadPhase(dt);
+
+    // Integrate forces
+    for (var i = 0; i < this.bodies.length; i++) {
+      var body = this.bodies[i];
+      if (body.inverseMass == 0) {
+        continue;
+      }
+
+      var dv = Vec2.scale(Vec2.add(this.gravity, Vec2.scale(body.force, body.inverseDensity)), dt));
+      body.velocity = Vec2.add(body.velocity, dv);
+
+      var dav = Vec2.scale(Vec2.scale(body.torque, body.inverseDensity), dt));
+      body.angularVelocity = Vec2.add(body.angularVelocity, dav);
+    }
+
+    // Pre-steps
+    var invDt = 1 / dt;
+    for (var i = 0; i < this.arbiters.length; i++) {
+      this.arbiters[i].preStep(invDt);
+    }
+    for (var i = 0; i < this.joints.length; i++) {
+      this.joints[i].preStep(invDt);
+    }
+
+    // Iterations
+    for (var i = 0; i < World.ITERATIONS; i++) {
+      for (var j = 0; j < this.arbiters.length; j++) {
+        this.arbiters[j].applyImpulse();
+      }
+      for (var j = 0; j < this.joints.length; j++) {
+        this.joints[j].applyImpulse();
+      }
+    }
+
+    // Integrate velocities
+    for (var i = 0; i < this.bodies.length; i++) {
+      var body = this.bodies[i];
+
+      body.position = Vec2.add(body.position, Vec2.scale(body.velocity, dt));
+      body.rotation = Vec2.add(body.rotation, Vec2.scale(body.angularVelocity, dt));
+
+      body.force = Vec2.of(0, 0);
+      body.torque = 0;
+    }
+  };
+
+  World.prototype.addBody(body) {
+    this.bodies.push(body);
+  };
+
+  World.prototype.removeBody(body) {
+  };
+
+  World.prototype.addJoint(joint) {
+    this.joints.push(joint);
+  };
+
+  World.prototype.removeJoint(joint) {
+  };
+
+  World.prototype.broadPhase(dt) {
+  };
 
   return {
     Vec2: Vec2,

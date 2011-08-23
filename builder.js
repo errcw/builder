@@ -28,7 +28,7 @@ var builder = (function() {
     ba.position = physics.Vec2.of(120, 20);
     var bb = new physics.Body(new physics.Circle(25), 20);
     bb.position = physics.Vec2.of(80, 35);
-    var bc = new physics.Body(new physics.Box(130, 30), 20);
+    var bc = new physics.Body(new physics.Box(40, 30), 20);
     bc.position = physics.Vec2.of(30, 80);
     bc.rotation = Math.PI / 4;
     var bd = new physics.Body(new physics.Box(20, 20), 30);
@@ -66,11 +66,6 @@ var builder = (function() {
         var sizeX = Math.abs(e.offsetX - game.newBody.position.x);
         var sizeY = Math.abs(e.offsetY - game.newBody.position.y);
         game.newBody.shape.setSize(sizeX, sizeY);
-
-        var dx = e.offsetX - game.newBody.position.x;
-        var dy = e.offsetY - game.newBody.position.y;
-        var v = physics.Vec2.normalize(physics.Vec2.of(dx, dy));
-        game.newBody.rotation = Math.acos(v.x);
       }
     });
     canvas.mouseup(function(e) {
@@ -136,11 +131,11 @@ var builder = (function() {
 
     ctx.strokeStyle = this.collided ? '#ff0000' : '#000';
     ctx.fillStyle = '#eee';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 3;
 
     ctx.translate(this.body.position.x, this.body.position.y);
-    ctx.rotate(this.body.rotation); // convert to clockwise rotation
-    //ctx.fillRect(-width / 2, -height / 2, width, height);
+    ctx.rotate(this.body.rotation);
+    ctx.fillRect(-width / 2, -height / 2, width, height);
     ctx.strokeRect(-width / 2, -height / 2, width, height);
 
     ctx.restore();
