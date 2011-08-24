@@ -224,8 +224,6 @@ var physics = (function() {
    */
   function Body(shape, mass) {
     this.shape = shape
-    this.mass = mass;
-    this.inverseMass = this.mass > 0 ? 1 / this.mass : 0;
 
     this.position = Vec2.of(0, 0);
     this.lastPosition = Vec2.of(0, 0);
@@ -235,6 +233,17 @@ var physics = (function() {
     this.force = Vec2.of(0, 0);
     this.torque = 0;
     this.surface_friction = 0.2;
+
+    this.mass = mass;
+    if (this.mass < Number.MAX_VALUE) {
+      this.inverseMass = 1 / this.mass;
+      this.density = this.mass;
+      this.inverseDensity = 1/ this.density;
+    } else {
+      this.inverseMass = 0;
+      this.density = Number.MAX_VALUE;
+      this.inverseDensity = 0;
+    }
   }
 
 
@@ -685,7 +694,7 @@ var physics = (function() {
    */
   World.prototype.update = function(dt) {
     // Broad phase collision detection
-    this.broadPhase(dt);
+    this.calculateCollisions();
 
     // Integrate forces
     for (var i = 0; i < this.bodies.length; i++) {
@@ -694,10 +703,10 @@ var physics = (function() {
         continue;
       }
 
-      var dv = Vec2.scale(Vec2.add(this.gravity, Vec2.scale(body.force, body.inverseDensity)), dt));
+      var dv = Vec2.scale(Vec2.add(this.gravity, Vec2.scale(body.force, body.inverseDensity)), dt);
       body.velocity = Vec2.add(body.velocity, dv);
 
-      var dav = Vec2.scale(Vec2.scale(body.torque, body.inverseDensity), dt));
+      var dav = Vec2.scale(Vec2.scale(body.torque, body.inverseDensity), dt);
       body.angularVelocity = Vec2.add(body.angularVelocity, dav);
     }
 
@@ -732,24 +741,50 @@ var physics = (function() {
     }
   };
 
-  World.prototype.addBody(body) {
+  World.prototype.addBody = function(body) {
     this.bodies.push(body);
   };
 
-  World.prototype.removeBody(body) {
+  World.prototype.removeBody = function(body) {
     //TODO
   };
 
-  World.prototype.addJoint(joint) {
+  World.prototype.addJoint = function(joint) {
     this.joints.push(joint);
   };
 
-  World.prototype.removeJoint(joint) {
+  World.prototype.removeJoint = function(joint) {
     //TODO
   };
 
-  World.prototype.broadPhase(dt) {
-    //TODO
+  /**
+   * Finds colliding bodies and their contact points. Creates or updates an
+   * Arbiter for each collision. TODO: Uses O(n^2) collision detection.
+   */
+  World.prototype.calculateCollisions = function() {
+    for (var i = 0; i < this.bodies.length; i++) {
+      var bi = this.bodies[i];
+      for (var j = i + 1; j < this.bodies.length; j++) {
+        var bj = this.bodies[j];
+
+        if (bi.inverseMass == 0 && bj.inverseMass == 0) {
+          continue;
+        }
+
+        var contacts = collide(bi, bj);
+        var id = BodyPair(bi, bj);
+        if (contacts.length > 0) {
+          var arbiter = this.arbiters.get(id);
+          if (arbiter != null) {
+            arbiter.setContacts(contacts);
+          } else {
+            this.arbiters.put(id, new Arbiter(bi, bj, contacts));
+          }
+        } else {
+          this.arbiters.remove(id);
+        }
+      }
+    }
   };
 
   return {
