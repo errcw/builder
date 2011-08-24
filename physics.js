@@ -666,8 +666,12 @@ var physics = (function() {
   };
 
   Arbiter.setContacts = function(contacts) {
-    //TODO
     this.contacts = contacts;
+    //TODO
+  };
+
+  Arbiter.hasBody = function(body) {
+    return this.body1 === body || this.body2 === body;
   };
 
 
@@ -746,7 +750,15 @@ var physics = (function() {
   };
 
   World.prototype.removeBody = function(body) {
-    //TODO
+    var bodyIdx = this.bodies.indexOf(body);
+    this.bodies.splice(bodyIdx, 1);
+
+    for (var i = 0; i < this.arbiters.length; i++) {
+      if (this.arbiters[i].hasBody(body)) {
+        this.arbiters.splice(i, 1);
+        //TODO modify the index here?
+      }
+    }
   };
 
   World.prototype.addJoint = function(joint) {
@@ -754,7 +766,8 @@ var physics = (function() {
   };
 
   World.prototype.removeJoint = function(joint) {
-    //TODO
+    var jointIdx = this.joints.indexOf(joint);
+    this.joints.splice(jointIdx, 1);
   };
 
   /**
@@ -762,6 +775,31 @@ var physics = (function() {
    * Arbiter for each collision. TODO: Uses O(n^2) collision detection.
    */
   World.prototype.calculateCollisions = function() {
+    //TODO a real map would be nice
+    function getArbiterFor(body1, body2) {
+      for (var i = 0; i < this.arbiters.length; i++) {
+        var arbiter = this.arbiters[i];
+        if (arbiter.hasBody(body1) && arbiter.hasBody(body2)) {
+          return arbiter;
+        }
+      }
+      return null;
+    }
+
+    function removeArbiterFor(body1, body2) {
+      var idx = -1;
+      for (var i = 0; i < this.arbiters.length; i++) {
+        var arbiter = this.arbiters[i];
+        if (arbiter.hasBody(body1) && arbiter.hasBody(body2)) {
+          idx = i;
+          break;
+        }
+      }
+      if (idx >= 0) {
+        this.arbiters.splice(idx, 1);
+      }
+    }
+
     for (var i = 0; i < this.bodies.length; i++) {
       var bi = this.bodies[i];
       for (var j = i + 1; j < this.bodies.length; j++) {
@@ -772,16 +810,15 @@ var physics = (function() {
         }
 
         var contacts = collide(bi, bj);
-        var id = BodyPair(bi, bj);
         if (contacts.length > 0) {
-          var arbiter = this.arbiters.get(id);
+          var arbiter = getArbiterFor(bi, bj);
           if (arbiter != null) {
             arbiter.setContacts(contacts);
           } else {
-            this.arbiters.put(id, new Arbiter(bi, bj, contacts));
+            this.arbiters.put(new Arbiter(bi, bj, contacts));
           }
         } else {
-          this.arbiters.remove(id);
+          removeArbiterFor(bi, bj);
         }
       }
     }
