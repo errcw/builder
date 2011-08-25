@@ -217,37 +217,6 @@ var physics = (function() {
 
 
   /**
-   * A two-dimensional body.
-   * @param shape {Shape} The shape of this body (e.g., Box)
-   * @param mass {number} The mass of this body
-   * @constructor
-   */
-  function Body(shape, mass) {
-    this.shape = shape
-
-    this.position = Vec2.of(0, 0);
-    this.lastPosition = Vec2.of(0, 0);
-    this.rotation = 0;
-    this.velocity = Vec2.of(0, 0);
-    this.angularVelocity = Vec2.of(0, 0);
-    this.force = Vec2.of(0, 0);
-    this.torque = 0;
-    this.surface_friction = 0.2;
-
-    this.mass = mass;
-    if (this.mass < Number.MAX_VALUE) {
-      this.inverseMass = 1 / this.mass;
-      this.density = this.mass;
-      this.inverseDensity = 1/ this.density;
-    } else {
-      this.inverseMass = 0;
-      this.density = Number.MAX_VALUE;
-      this.inverseDensity = 0;
-    }
-  }
-
-
-  /**
    * Describes a point of contact between two bodies.
    * @constructor
    */
@@ -650,6 +619,54 @@ var physics = (function() {
 
 
   /**
+   * A two-dimensional body.
+   * @param shape {Shape} The shape of this body (e.g., Box)
+   * @param mass {number} The mass of this body
+   * @constructor
+   */
+  function Body(shape, mass) {
+    this.shape = shape
+
+    this.position = Vec2.of(0, 0);
+    this.lastPosition = Vec2.of(0, 0);
+    this.rotation = 0;
+    this.velocity = Vec2.of(0, 0);
+    this.angularVelocity = 0;
+    this.force = Vec2.of(0, 0);
+    this.torque = 0;
+    this.surface_friction = 0.2;
+
+    this.mass = mass;
+    if (this.mass < Number.MAX_VALUE) {
+      this.inverseMass = 1 / this.mass;
+      this.density = this.mass;
+      this.inverseDensity = 1/ this.density;
+    } else {
+      this.inverseMass = 0;
+      this.density = Number.MAX_VALUE;
+      this.inverseDensity = 0;
+    }
+  }
+
+
+  /**
+   * A link between two bodies.
+   * @constructor
+   */
+  function Joint(body1, body2, anchor) {
+    this.body1 = body1;
+    this.body2 = body2;
+    this.anchor = anchor;
+  }
+
+  Joint.prototype.preStep = function(invDt) {
+  };
+
+  Joint.prototype.applyImpulse = function() {
+  };
+
+
+  /**
    * Manages the collision between two bodies.
    * @constructor
    */
@@ -683,7 +700,7 @@ var physics = (function() {
     this.bodies = [];
     this.arbiters = [];
     this.joints = [];
-    this.gravity = Vec2.of(0, -10);
+    this.gravity = Vec2.of(0, 10);
   }
 
   /**
@@ -710,8 +727,7 @@ var physics = (function() {
       var dv = Vec2.scale(Vec2.add(this.gravity, Vec2.scale(body.force, body.inverseDensity)), dt);
       body.velocity = Vec2.add(body.velocity, dv);
 
-      var dav = Vec2.scale(Vec2.scale(body.torque, body.inverseDensity), dt);
-      body.angularVelocity = Vec2.add(body.angularVelocity, dav);
+      body.angularVelocity += body.torque * body.inverseDensity * dt;
     }
 
     // Pre-steps
@@ -738,7 +754,7 @@ var physics = (function() {
       var body = this.bodies[i];
 
       body.position = Vec2.add(body.position, Vec2.scale(body.velocity, dt));
-      body.rotation = Vec2.add(body.rotation, Vec2.scale(body.angularVelocity, dt));
+      body.rotation += body.angularVelocity * dt;
 
       body.force = Vec2.of(0, 0);
       body.torque = 0;
@@ -775,10 +791,12 @@ var physics = (function() {
    * Arbiter for each collision. TODO: Uses O(n^2) collision detection.
    */
   World.prototype.calculateCollisions = function() {
+    var world = this;
+
     //TODO a real map would be nice
     function getArbiterFor(body1, body2) {
-      for (var i = 0; i < this.arbiters.length; i++) {
-        var arbiter = this.arbiters[i];
+      for (var i = 0; i < world.arbiters.length; i++) {
+        var arbiter = world.arbiters[i];
         if (arbiter.hasBody(body1) && arbiter.hasBody(body2)) {
           return arbiter;
         }
@@ -788,15 +806,15 @@ var physics = (function() {
 
     function removeArbiterFor(body1, body2) {
       var idx = -1;
-      for (var i = 0; i < this.arbiters.length; i++) {
-        var arbiter = this.arbiters[i];
+      for (var i = 0; i < world.arbiters.length; i++) {
+        var arbiter = world.arbiters[i];
         if (arbiter.hasBody(body1) && arbiter.hasBody(body2)) {
           idx = i;
           break;
         }
       }
       if (idx >= 0) {
-        this.arbiters.splice(idx, 1);
+        world.arbiters.splice(idx, 1);
       }
     }
 
@@ -830,6 +848,7 @@ var physics = (function() {
     Box: Box,
     Circle: Circle,
     Body: Body,
-    collide: collide
+    collide: collide,
+    World: World,
   };
 })();
