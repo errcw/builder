@@ -37,6 +37,11 @@ var builder = (function() {
 
     this.bodies = [ba, bb, bc, bd];
 
+    this.world = new physics.World();
+    for (var i = 0; i < this.bodies.length; i++) {
+      this.world.addBody(this.bodies[i]);
+    }
+
     this.views = [];
     for (var i = 0; i < this.bodies.length; i++) {
       this.views.push(createView(this.bodies[i]));
@@ -93,6 +98,7 @@ var builder = (function() {
    * @param dt {number} The elapsed time, in seconds, since the last update
    */
   Builder.prototype.update = function(dt) {
+    this.world.update(dt);
   };
 
   /**
