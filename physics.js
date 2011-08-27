@@ -682,12 +682,12 @@ var physics = (function() {
   Arbiter.prototype.applyImpulse = function() {
   };
 
-  Arbiter.setContacts = function(contacts) {
+  Arbiter.prototype.setContacts = function(contacts) {
     this.contacts = contacts;
     //TODO
   };
 
-  Arbiter.hasBody = function(body) {
+  Arbiter.prototype.hasBody = function(body) {
     return this.body1 === body || this.body2 === body;
   };
 
@@ -833,7 +833,7 @@ var physics = (function() {
           if (arbiter != null) {
             arbiter.setContacts(contacts);
           } else {
-            this.arbiters.put(new Arbiter(bi, bj, contacts));
+            this.arbiters.push(new Arbiter(bi, bj, contacts));
           }
         } else {
           removeArbiterFor(bi, bj);

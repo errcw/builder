@@ -10,6 +10,9 @@ var builder = (function() {
   function Builder() {
   }
 
+  Builder.WIDTH = 640;
+  Builder.HEIGHT = 480;
+
   /**
    * Starts the game loop.
    */
@@ -24,18 +27,15 @@ var builder = (function() {
     // Work around http://bugs.jquery.com/ticket/9678
     setInterval(function() { }, 24*60*60*1000);
 
-    var ba = new physics.Body(new physics.Circle(10), 10);
-    ba.position = physics.Vec2.of(120, 20);
-    var bb = new physics.Body(new physics.Circle(25), 20);
-    bb.position = physics.Vec2.of(80, 35);
-    var bc = new physics.Body(new physics.Box(40, 30), 20);
-    bc.position = physics.Vec2.of(30, 80);
-    bc.rotation = Math.PI / 4;
-    var bd = new physics.Body(new physics.Box(20, 20), 30);
-    bd.position = physics.Vec2.of(140, 75);
-    bd.rotation = -0.2;
+    var ground = new physics.Body(new physics.Box(Builder.WIDTH, 40), Number.MAX_VALUE);
+    ground.position = physics.Vec2.of(Builder.WIDTH / 2, Builder.HEIGHT);
+    ground.rotation = 0;
 
-    this.bodies = [ba, bb, bc, bd];
+    var box = new physics.Body(new physics.Box(20, 20), 10);
+    box.position = physics.Vec2.of(120, 20);
+    box.rotation = 0;
+
+    this.bodies = [ground, box];
 
     this.world = new physics.World();
     for (var i = 0; i < this.bodies.length; i++) {
@@ -89,9 +89,6 @@ var builder = (function() {
       game.draw(context);
     }, frameTimeInMillis);
   };
-
-  Builder.WIDTH = 640;
-  Builder.HEIGHT = 480;
 
   /**
    * Updates the game for the current frame.
