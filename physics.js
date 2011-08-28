@@ -642,7 +642,7 @@ var physics = (function() {
     this.angularVelocity = 0;
     this.force = Vec2.of(0, 0);
     this.torque = 0;
-    this.surface_friction = 0.2;
+    this.friction = 0.2;
 
     this.mass = mass;
     if (this.mass < Number.MAX_VALUE) {
@@ -682,6 +682,8 @@ var physics = (function() {
     this.body1 = body1;
     this.body2 = body2;
     this.contacts = contacts;
+
+    this.friction = Math.sqrt(this.body1.friction * this.body2.friction);
   }
 
   /**
@@ -697,6 +699,8 @@ var physics = (function() {
   Arbiter.BIAS_FACTOR = 0.2;
 
   Arbiter.prototype.preStep = function(invDt) {
+    var body1 = this.body1;
+    var body2 = this.body2;
     for (var i = 0; i < this.contacts.length; i++) {
       var contact = this.contacts[i];
 
@@ -730,14 +734,70 @@ var physics = (function() {
       body1.velocity = Vec2.sub(body1.velocity, Vec2.scale(p, body1.inverseMass));
       body1.angularVelocity -= Vec2.crossVec(r1, p) * body1.inverseDensity;
 
-      body2.velocity = Vec2.sub(body2.velocity, Vec2.scale(p, body2.inverseMass));
-      body2.angularVelocity -= Vec2.crossVec(r2, p) * body2.inverseDensity;
+      body2.velocity = Vec2.add(body2.velocity, Vec2.scale(p, body2.inverseMass));
+      body2.angularVelocity += Vec2.crossVec(r2, p) * body2.inverseDensity;
     }
   };
 
   Arbiter.prototype.applyImpulse = function() {
+    var body1 = this.body1;
+    var body2 = this.body2;
     for (var i = 0; i < this.contacts.length; i++) {
       var contact = this.contacts[i];
+
+      contact.r1 = Vec2.sub(contact.position, body1.position);
+      contact.r2 = Vec2.sub(contact.position, body2.position);
+
+      // Compute relative velocity at contact
+      var dv = Vec2.sub(
+        Vec2.add(body2.velocity, Vec2.cross(contact.r2, body2.angularVelocity)),
+        Vec2.sub(body1.velocity, Vec2.cross(contact.r1, body1.angularVelocity)));
+
+      // Compute normal impulse
+      var vn = Vec2.dot(dv, contact.normal);
+
+      var dPn = contact.massNormal * (-vn + contact.bias);
+
+      // Clamp the accumulated normal impulse
+      var Pn0 = contact.Pn;
+      contact.Pn = Math.max(Pn0 + dPn, 0);
+      dPn = contact.Pn - Pn0;
+
+      // Apply contact normal impulse
+      var Pn = Vec2.scale(contact.normal, dPn);
+
+      body1.velocity = Vec2.sub(body1.velocity, Vec2.scale(Pn, body1.inverseMass));
+      body1.angularVelocity -= body1.inverseDensity * Vec2.crossVec(contact.r1, Pn);
+
+      body2.velocity = Vec2.add(body2.velocity, Vec2.scale(Pn, body2.inverseMass));
+      body2.angularVelocity += body2.inverseDensity * Vec2.crossVec(contact.r2, Pn);
+
+
+      // Recompute relative velocity at contact
+      dv = Vec2.sub(
+        Vec2.add(body2.velocity, Vec2.cross(contact.r2, body2.angularVelocity)),
+        Vec2.sub(body1.velocity, Vec2.cross(contact.r1, body1.angularVelocity)));
+
+      var tangent = Vec2.cross(contact.normal, 1.0);
+      var vt = Vec2.dot(dv, tangent);
+      var dPt = contact.massTangent * -vt;
+
+      // Compute friction impulse
+      var maxPt = this.friction * contact.Pn;
+
+      // Clamp the accumulated friction impulse
+      var Pt0 = contact.Pt;
+      contact.Pt = Math.max(-maxPt, Math.min(maxPt, Pt0 + dPt));
+      dPt = contact.Pt - Pt0;
+
+      // Apply contact tangent impulse
+      var Pt = Vec2.scale(dPt, tangent);
+
+      body1.velocity = Vec2.sub(body1.velocity, Vec2.scale(Pt, body1.inverseMass));
+      body1.angularVelocity -= body1.inverseDensity * Vec2.crossVec(contact.r1, Pt);
+
+      body2.velocity = Vec2.add(body2.velocity, Vec2.scale(Pt, body2.inverseMass));
+      body2.angularVelocity += body2.inverseDensity * Vec2.crossVec(contact.r2, Pt);
     }
   };
 
@@ -890,7 +950,7 @@ var physics = (function() {
         if (contacts.length > 0) {
           var arbiter = getArbiterFor(bi, bj);
           if (arbiter != null) {
-            arbiter.setContacts(contacts);
+            //TODO arbiter.setContacts(contacts);
           } else {
             this.arbiters.push(new Arbiter(bi, bj, contacts));
           }
