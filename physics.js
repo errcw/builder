@@ -32,6 +32,14 @@ var physics = (function() {
     return a.x * b.x + a.y * b.y;
   };
 
+  Vec2.cross = function(v, s) {
+    return Vec2.of(v.y * s, v.x * -s);
+  };
+
+  Vec2.crossVec = function(a, b) {
+    return a.x * b.y - a.y * b.x;
+  };
+
   Vec2.normalize = function(v) {
     var scale = 1 / Vec2.len(v);
     return Vec2.of(scale * v.x, scale * v.y);
@@ -676,10 +684,61 @@ var physics = (function() {
     this.contacts = contacts;
   }
 
+  /**
+   * The amonut of penetration between bodies before separating them.
+   * @const
+   */
+  Arbiter.ALLOWED_PENETRATION = 0.01;
+
+  /**
+   * The bias factor. (TODO)
+   * @const
+   */
+  Arbiter.BIAS_FACTOR = 0.2;
+
   Arbiter.prototype.preStep = function(invDt) {
+    for (var i = 0; i < this.contacts.length; i++) {
+      var contact = this.contacts[i];
+
+      var r1 = Vec2.sub(contact.position, body1.position);
+      var r2 = Vec2.sub(contact.position, body2.position);
+
+      // Compute normal mass, tangent mass, bias
+      var rn1 = Vec2.dot(r1, contact.normal);
+      var rn2 = Vec2.dot(r2, contact.normal);
+      var normal = body1.inverseMass * body2.inverseMass;
+      normal +=
+        body1.inverseDensity * (Vec2.dot(r1, r1) - rn1 * rn1) +
+        body2.inverseDensity * (Vec2.dot(r2, r2) - rn2 * rn2);
+      contact.massNormal = 1 / normal;
+
+      var tangent = Vec2.cross(contact.normal, 1.0);
+      var rt1 = Vec2.dot(r1, tangent);
+      var rt2 = Vec2.dot(r2, tangent);
+      var tangent = body1.inverseMass * body2.inverseMass;
+      tangent +=
+        body1.inverseDensity * (Vec2.dot(r1, r1) - rt1 * rt1) +
+        body2.inverseDensity * (Vec2.dot(r2, r2) - rt2 * rt2);
+      contact.massTangent = 1 / tangent;
+
+      var adjustedSeparation = Math.min(0, contact.separation + Arbiter.ALLOWED_PENETRATION);
+      contact.bias = -Arbiter.BIAS_FACTOR * invDt * adjustedSeparation;
+
+      // Apply normal+friction impulse
+      var p = Vec2.add(Vec2.scale(contact.normal, contact.Pn), Vec2.scale(tangent, contact.Pt));
+
+      body1.velocity = Vec2.sub(body1.velocity, Vec2.scale(p, body1.inverseMass));
+      body1.angularVelocity -= Vec2.crossVec(r1, p) * body1.inverseDensity;
+
+      body2.velocity = Vec2.sub(body2.velocity, Vec2.scale(p, body2.inverseMass));
+      body2.angularVelocity -= Vec2.crossVec(r2, p) * body2.inverseDensity;
+    }
   };
 
   Arbiter.prototype.applyImpulse = function() {
+    for (var i = 0; i < this.contacts.length; i++) {
+      var contact = this.contacts[i];
+    }
   };
 
   Arbiter.prototype.setContacts = function(contacts) {
