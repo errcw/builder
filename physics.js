@@ -233,6 +233,11 @@ var physics = (function() {
     this.position = position;
     this.normal = normal;
     this.id = opt_id || null;
+
+    // Accumulated impulses
+    this.Pn = 0;
+    this.Pt = 0;
+    this.Pnb = 0;
   }
 
 
@@ -707,20 +712,20 @@ var physics = (function() {
       // Compute normal mass, tangent mass, bias
       var rn1 = Vec2.dot(r1, contact.normal);
       var rn2 = Vec2.dot(r2, contact.normal);
-      var normal = body1.inverseMass * body2.inverseMass;
-      normal +=
+      var kNormal = body1.inverseMass * body2.inverseMass;
+      kNormal +=
         body1.inverseDensity * (Vec2.dot(r1, r1) - rn1 * rn1) +
         body2.inverseDensity * (Vec2.dot(r2, r2) - rn2 * rn2);
-      contact.massNormal = 1 / normal;
+      contact.massNormal = 1 / kNormal;
 
       var tangent = Vec2.cross(contact.normal, 1.0);
       var rt1 = Vec2.dot(r1, tangent);
       var rt2 = Vec2.dot(r2, tangent);
-      var tangent = body1.inverseMass * body2.inverseMass;
-      tangent +=
+      var kTangent = body1.inverseMass * body2.inverseMass;
+      kTangent +=
         body1.inverseDensity * (Vec2.dot(r1, r1) - rt1 * rt1) +
         body2.inverseDensity * (Vec2.dot(r2, r2) - rt2 * rt2);
-      contact.massTangent = 1 / tangent;
+      contact.massTangent = 1 / kTangent;
 
       var adjustedSeparation = Math.min(0, contact.separation + Arbiter.ALLOWED_PENETRATION);
       contact.bias = -Arbiter.BIAS_FACTOR * invDt * adjustedSeparation;
@@ -788,7 +793,7 @@ var physics = (function() {
       dPt = contact.Pt - Pt0;
 
       // Apply contact tangent impulse
-      var Pt = Vec2.scale(dPt, tangent);
+      var Pt = Vec2.scale(tangent, dPt);
 
       body1.velocity = Vec2.sub(body1.velocity, Vec2.scale(Pt, body1.inverseMass));
       body1.angularVelocity -= body1.inverseDensity * Vec2.crossVec(contact.r1, Pt);
