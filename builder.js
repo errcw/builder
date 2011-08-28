@@ -31,11 +31,15 @@ var builder = (function() {
     ground.position = physics.Vec2.of(Builder.WIDTH / 2, Builder.HEIGHT);
     ground.rotation = 0;
 
-    var box = new physics.Body(new physics.Box(20, 20), 100);
-    box.position = physics.Vec2.of(120, 420);
-    box.rotation = 0;
+    var box1 = new physics.Body(new physics.Box(20, 20), 100);
+    box1.position = physics.Vec2.of(120, 420);
+    box1.rotation = 0;
 
-    this.bodies = [ground, box];
+    var box2 = new physics.Body(new physics.Box(60, 10), 200);
+    box2.position = physics.Vec2.of(420, 220);
+    box2.rotation = 10;
+
+    this.bodies = [ground, box1, box2];
 
     this.world = new physics.World();
     for (var i = 0; i < this.bodies.length; i++) {
@@ -61,7 +65,7 @@ var builder = (function() {
       }
 
       // Otherwise start creating a new body
-      game.newBody = new physics.Body(new physics.Box(1, 1), 10);
+      game.newBody = new physics.Body(new physics.Box(30, 30), 300);
       game.newBody.position = physics.Vec2.of(e.offsetX, e.offsetY);
       game.newBody.rotation = 0;
       game.views.push(createView(game.newBody));
@@ -80,6 +84,7 @@ var builder = (function() {
 
       if (game.newBody != null) {
         game.bodies.push(game.newBody);
+        game.world.addBody(game.newBody);
       }
       game.newBody = null;
     });

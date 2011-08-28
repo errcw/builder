@@ -645,7 +645,7 @@ var physics = (function() {
    * @constructor
    */
   function Body(shape, mass) {
-    this.shape = shape
+    this.shape = shape;
 
     this.position = Vec2.of(0, 0);
     this.lastPosition = Vec2.of(0, 0);
@@ -856,10 +856,10 @@ var physics = (function() {
   }
 
   /**
-   * Number of impluse iterations to apply each update step.
+   * Number of impulse iterations to apply each update step.
    * @const
    */
-  World.ITERATIONS = 5;
+  World.ITERATIONS = 10;
 
   /**
    * Updates this world for the given time step.
