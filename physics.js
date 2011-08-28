@@ -126,6 +126,7 @@ var physics = (function() {
   Box.prototype.setSize = function(width, height) {
     this.size = Vec2.of(width, height);
     this.bounds = new BoundingBox(Vec2.len(this.size), Vec2.len(this.size));
+    this.surfaceFactor = width * width + height * height;
   };
 
   /**
@@ -150,10 +151,17 @@ var physics = (function() {
    * @constructor
    */
   function Circle(radius) {
+    this.setRadius(radius);
+  }
+
+  /**
+   * @param radius {number} The new radius of this circle
+   */
+  Circle.prototype.setRadius = function(radius) {
     this.radius = radius;
     this.bounds = new BoundingBox(radius * 2, radius * 2);
-    this.type = Circle.TYPE;
-  }
+    this.surfaceFactor = (this.radius * Math.PI) * (this.radius * Math.PI);
+  };
 
 
   /**
@@ -651,8 +659,8 @@ var physics = (function() {
     this.mass = mass;
     if (this.mass < Number.MAX_VALUE) {
       this.inverseMass = 1 / this.mass;
-      this.density = this.mass;
-      this.inverseDensity = 1/ this.density;
+      this.density = this.mass * shape.surfaceFactor / 12;
+      this.inverseDensity = 1 / this.density;
     } else {
       this.inverseMass = 0;
       this.density = Number.MAX_VALUE;
@@ -714,7 +722,7 @@ var physics = (function() {
       // Compute normal mass, tangent mass, bias
       var rn1 = Vec2.dot(r1, contact.normal);
       var rn2 = Vec2.dot(r2, contact.normal);
-      var kNormal = body1.inverseMass * body2.inverseMass;
+      var kNormal = body1.inverseMass + body2.inverseMass;
       kNormal +=
         body1.inverseDensity * (Vec2.dot(r1, r1) - rn1 * rn1) +
         body2.inverseDensity * (Vec2.dot(r2, r2) - rn2 * rn2);
@@ -723,7 +731,7 @@ var physics = (function() {
       var tangent = Vec2.cross(contact.normal, 1.0);
       var rt1 = Vec2.dot(r1, tangent);
       var rt2 = Vec2.dot(r2, tangent);
-      var kTangent = body1.inverseMass * body2.inverseMass;
+      var kTangent = body1.inverseMass + body2.inverseMass;
       kTangent +=
         body1.inverseDensity * (Vec2.dot(r1, r1) - rt1 * rt1) +
         body2.inverseDensity * (Vec2.dot(r2, r2) - rt2 * rt2);
@@ -754,8 +762,8 @@ var physics = (function() {
 
       // Compute relative velocity at contact
       var dv = Vec2.sub(
-        Vec2.add(body2.velocity, Vec2.cross(contact.r2, body2.angularVelocity)),
-        Vec2.sub(body1.velocity, Vec2.cross(contact.r1, body1.angularVelocity)));
+        Vec2.add(body2.velocity, Vec2.cross(contact.r2, -body2.angularVelocity)),
+        Vec2.sub(body1.velocity, Vec2.cross(contact.r1, -body1.angularVelocity)));
 
       // Compute normal impulse
       var vn = Vec2.dot(dv, contact.normal);
@@ -779,8 +787,8 @@ var physics = (function() {
 
       // Recompute relative velocity at contact
       dv = Vec2.sub(
-        Vec2.add(body2.velocity, Vec2.cross(contact.r2, body2.angularVelocity)),
-        Vec2.sub(body1.velocity, Vec2.cross(contact.r1, body1.angularVelocity)));
+        Vec2.add(body2.velocity, Vec2.cross(contact.r2, -body2.angularVelocity)),
+        Vec2.sub(body1.velocity, Vec2.cross(contact.r1, -body1.angularVelocity)));
 
       var tangent = Vec2.cross(contact.normal, 1.0);
       var vt = Vec2.dot(dv, tangent);
