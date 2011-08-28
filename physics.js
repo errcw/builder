@@ -232,13 +232,15 @@ var physics = (function() {
     this.separation = separation;
     this.position = position;
     this.normal = normal;
-    this.id = opt_id || null;
+    this.id = opt_id || Contact.NO_ID;
 
     // Accumulated impulses
     this.Pn = 0;
     this.Pt = 0;
     this.Pnb = 0;
   }
+
+  Contact.NO_ID = { equals: function(other) { return true; } };
 
 
   /**
@@ -803,9 +805,30 @@ var physics = (function() {
     }
   };
 
-  Arbiter.prototype.setContacts = function(contacts) {
-    this.contacts = contacts;
-    //TODO
+  Arbiter.prototype.setContacts = function(newContacts) {
+    for (var i = 0; i < newContacts.length; i++) {
+      var newContact = newContacts[i];
+      var oldContact = null;
+
+      // Find any existing contact matching the new contact
+      for (var j = 0; j < this.contacts.length; j++) {
+        var contact = this.contacts[j];
+        if (contact.id.equals(newContact.id)) {
+          oldContact = contact;
+          break;
+        }
+      }
+
+      // Found an existing contact, update it with the existing information
+      if (oldContact != null) {
+        newContact.Pn = oldContact.Pn;
+        newContact.Pt = oldContact.Pt;
+        newContact.Pnb = oldContact.Pnb;
+      }
+    }
+
+    // Switch to using the new contacts
+    this.contacts = newContacts;
   };
 
   Arbiter.prototype.hasBody = function(body) {
@@ -952,7 +975,7 @@ var physics = (function() {
         if (contacts.length > 0) {
           var arbiter = getArbiterFor(bi, bj);
           if (arbiter != null) {
-            //TODO arbiter.setContacts(contacts);
+            arbiter.setContacts(contacts);
           } else {
             this.arbiters.push(new Arbiter(bi, bj, contacts));
           }
