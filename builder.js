@@ -31,8 +31,8 @@ var builder = (function() {
     ground.position = physics.Vec2.of(Builder.WIDTH / 2, Builder.HEIGHT);
     ground.rotation = 0;
 
-    var box = new physics.Body(new physics.Box(20, 20), 10);
-    box.position = physics.Vec2.of(120, 20);
+    var box = new physics.Body(new physics.Box(20, 20), 100);
+    box.position = physics.Vec2.of(120, 420);
     box.rotation = 0;
 
     this.bodies = [ground, box];

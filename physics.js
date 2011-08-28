@@ -461,8 +461,7 @@ var physics = (function() {
       normal = Vec2.neg(normal);
     }
 
-    // facea.y > REL_TOL * separation + ABS_TOL * ha.y
-    if (facea.y > Vec2.add(Vec2.scale(separation, REL_TOL), Vec2.scale(ha.y, ABS_TOL))) {
+    if (facea.y > separation * REL_TOL + ha.y * ABS_TOL) {
       axis = SeparatingAxis.FACE_A_Y;
       separation = facea.y;
       normal = Vec2.of(rota.e12, rota.e22);
@@ -471,8 +470,7 @@ var physics = (function() {
       }
     }
 
-    // faceb.x > REL_TOL * separation + ABS_TOL * hb.x
-    if (faceb.x > Vec2.add(Vec2.scale(separation, REL_TOL), Vec2.scale(hb.x, ABS_TOL))) {
+    if (faceb.x > separation * REL_TOL + hb.x * ABS_TOL) {
       axis = SeparatingAxis.FACE_B_X;
       separation = faceb.x;
       normal = Vec2.of(rotb.e11, rotb.e21);
@@ -481,8 +479,7 @@ var physics = (function() {
       }
     }
 
-    // faceb.y > REL_TOL * separation + ABS_TOL * hb.y
-    if (faceb.y > Vec2.add(Vec2.scale(separation, REL_TOL), Vec2.scale(hb.y, ABS_TOL))) {
+    if (faceb.y > separation * REL_TOL + hb.y * ABS_TOL) {
       axis = SeparatingAxis.FACE_B_Y;
       separation = faceb.y;
       normal = Vec2.of(rotb.e12, rotb.e22);
