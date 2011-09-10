@@ -245,7 +245,6 @@ var physics = (function() {
     // Accumulated impulses
     this.Pn = 0;
     this.Pt = 0;
-    this.Pnb = 0;
   }
 
   Contact.NO_ID = { equals: function(other) { return true; } };
@@ -648,7 +647,6 @@ var physics = (function() {
     this.shape = shape;
 
     this.position = Vec2.of(0, 0);
-    this.lastPosition = Vec2.of(0, 0);
     this.rotation = 0;
     this.velocity = Vec2.of(0, 0);
     this.angularVelocity = 0;
@@ -762,8 +760,10 @@ var physics = (function() {
 
       // Compute relative velocity at contact
       var dv = Vec2.sub(
-        Vec2.add(body2.velocity, Vec2.cross(contact.r2, -body2.angularVelocity)),
-        Vec2.sub(body1.velocity, Vec2.cross(contact.r1, -body1.angularVelocity)));
+        Vec2.sub(
+          Vec2.add(body2.velocity, Vec2.cross(contact.r2, -body2.angularVelocity)),
+          body1.velocity),
+        Vec2.cross(contact.r1, -body1.angularVelocity));
 
       // Compute normal impulse
       var vn = Vec2.dot(dv, contact.normal);
@@ -787,8 +787,10 @@ var physics = (function() {
 
       // Recompute relative velocity at contact
       dv = Vec2.sub(
-        Vec2.add(body2.velocity, Vec2.cross(contact.r2, -body2.angularVelocity)),
-        Vec2.sub(body1.velocity, Vec2.cross(contact.r1, -body1.angularVelocity)));
+        Vec2.sub(
+          Vec2.add(body2.velocity, Vec2.cross(contact.r2, -body2.angularVelocity)),
+          body1.velocity),
+        Vec2.cross(contact.r1, -body1.angularVelocity));
 
       var tangent = Vec2.cross(contact.normal, 1.0);
       var vt = Vec2.dot(dv, tangent);
@@ -831,7 +833,6 @@ var physics = (function() {
       if (oldContact != null) {
         newContact.Pn = oldContact.Pn;
         newContact.Pt = oldContact.Pt;
-        newContact.Pnb = oldContact.Pnb;
       }
     }
 
