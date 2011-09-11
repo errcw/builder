@@ -20,7 +20,7 @@ var builder = (function() {
     var game = this;
     var canvas = $('#canvas');
 
-    var frameTimeInMillis = 1000 / 30;
+    var frameTimeInMillis = 1000 / 60;
     var frameTimeInSeconds = frameTimeInMillis / 1000;
     var context = canvas[0].getContext('2d');
 
@@ -31,15 +31,19 @@ var builder = (function() {
     ground.position = physics.Vec2.of(Builder.WIDTH / 2, Builder.HEIGHT);
     ground.rotation = 0;
 
-    var box1 = new physics.Body(new physics.Box(20, 20), 100);
+    var box1 = new physics.Body(new physics.Box(20, 20), 2000);
     box1.position = physics.Vec2.of(120, 420);
     box1.rotation = 0;
 
-    var box2 = new physics.Body(new physics.Box(60, 10), 200);
-    box2.position = physics.Vec2.of(420, 220);
-    box2.rotation = 10;
+    var box2 = new physics.Body(new physics.Box(20, 20), 2000);
+    box2.position = physics.Vec2.of(120, 380);
+    box2.rotation = 0;
 
-    this.bodies = [ground, box1, box2];
+    var box3 = new physics.Body(new physics.Box(20, 20), 2000);
+    box3.position = physics.Vec2.of(120, 340);
+    box3.rotation = 0;
+
+    this.bodies = [ground, box1, box2, box3];
 
     this.world = new physics.World();
     for (var i = 0; i < this.bodies.length; i++) {
