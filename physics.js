@@ -77,6 +77,12 @@ var physics = (function() {
     return new Mat22(e11, e12, e21, e22);
   };
 
+  Mat22.add = function(a, b) {
+    return Mat22.of(
+        a.e11 + b.e11, a.e12 + b.e12,
+        a.e21 + b.e21, a.e22 + b.e22);
+  };
+
   Mat22.mulVec = function(m, v) {
     return Vec2.of(
         m.e11 * v.x + m.e12 * v.y,
@@ -85,18 +91,25 @@ var physics = (function() {
 
   Mat22.mulMat = function(m1, m2) {
     return Mat22.of(
-        m1.e11 * m2.e11 + m1.e12 * m2.e21,
-        m1.e11 * m2.e21 + m1.e12 * m2.e22,
-        m1.e21 * m2.e11 + m1.e22 * m2.e21,
-        m1.e21 * m2.e12 + m1.e22 * m2.e22);
-  }
+        m1.e11 * m2.e11 + m1.e12 * m2.e21, m1.e11 * m2.e21 + m1.e12 * m2.e22,
+        m1.e21 * m2.e11 + m1.e22 * m2.e21, m1.e21 * m2.e12 + m1.e22 * m2.e22);
+  };
 
-  Mat22.transpose = function(mat22) {
-    return Mat22.of(mat22.e11, mat22.e21, mat22.e12, mat22.e22);
+  Mat22.transpose = function(m) {
+    return Mat22.of(m.e11, m.e21, m.e12, m.e22);
+  };
+
+  Mat22.invert = function(m) {
+    var invDet = 1 / (m.e11 * m.e22 - m.e12 * m.e21);
+    return Mat22.of(
+        invDet * m.e22, -invDet * m.e12,
+        -invDet * m.e21, invDet * m.e11);
   };
 
   Mat22.abs = function(m) {
-    return Mat22.of(Math.abs(m.e11), Math.abs(m.e12), Math.abs(m.e21), Math.abs(m.e22));
+    return Mat22.of(
+        Math.abs(m.e11), Math.abs(m.e12),
+        Math.abs(m.e21), Math.abs(m.e22));
   };
 
   /**
@@ -674,13 +687,87 @@ var physics = (function() {
   function Joint(body1, body2, anchor) {
     this.body1 = body1;
     this.body2 = body2;
-    this.anchor = anchor;
+
+    this.softness = 0;
+    this.p = Vec2.of(0, 0);
+
+    // Initialise the local anchor points
+    var rot1t = Mat22.transpose(Mat22.forRotation(body1.rotation));
+    var rot2t = Mat22.transpose(Mat22.forRotation(body2.rotation));
+    this.localAnchor1 = Mat22.mulVec(rot1t, Vec2.sub(anchor, body1.position));
+    this.localAnchor2 = Mat22.mulVec(rot2t, Vec2.sub(anchor, body2.position));
   }
 
+  /**
+   * The bias factor. (TODO)
+   * @const
+   */
+  Joint.BIAS_FACTOR = 0.2;
+
   Joint.prototype.preStep = function(invDt) {
+    var body1 = this.body1;
+    var body2 = this.body2;
+
+    var rot1 = Mat22.forRotation(this.body1.rotation);
+    var rot2 = Mat22.forRotation(this.body2.rotation);
+
+    this.r1 = Mat22.mulVec(rot1, this.localAnchor1);
+    this.r2 = Mat22.mulVec(rot2, this.localAnchor2);
+
+    var k1 = Mat22.of(
+        body1.inverseMass + body2.inverseMass,
+        0,
+        0,
+        body1.inverseMass + body2.inverseMass);
+
+    var k2 = Mat22.of(
+        body1.inverseDensity * this.r1.y * this.r1.y,
+        -body1.inverseDensity * this.r1.x * this.r1.y,
+        -body1.inverseDensity * this.r1.x * this.r1.y,
+        body1.inverseDensity * this.r1.x * this.r1.x);
+
+    var k3 = Mat22.of(
+        body2.inverseDensity * this.r2.y * this.r2.y,
+        -body2.inverseDensity * this.r2.x * this.r2.y,
+        -body2.inverseDensity * this.r2.x * this.r2.y,
+        body2.inverseDensity * this.r2.x * this.r2.x);
+
+    var k = Mat22.add(Mat22.add(k1, k2), k3);
+    k.e11 += this.softness;
+    k.e22 += this.softness;
+
+    this.m = Mat22.inverse(k); 
+
+    var p1 = Vec2.add(body1.position, this.r1);
+    var p2 = Vec2.add(body2.position, this.r2);
+    var dp = Vec2.sub(p2, p1);
+
+    this.bias = Vec2.scale(dp, -Joint.BIAS_FACTOR * invDt);
+
+    // Apply the accumulated impulse (warm starting)
+    body1.velocity = Vec2.sub(body1.velocity, Vec2.scale(this.p, body1.inverseMass));
+    body1.angularVelocity -= Vec2.crossVec(this.r1, this.p) * body1.inverseDensity;
+
+    body2.velocity = Vec2.add(body2.velocity, Vec2.scale(this.p, body2.inverseMass));
+    body2.angularVelocity += Vec2.crossVec(this.r2, this.p) * body2.inverseDensity;
   };
 
   Joint.prototype.applyImpulse = function() {
+    var dv = Vec2.sub(
+        Vec2.sub(
+            Vec2.add(body2.velocity, Vec2.cross(this.r2, -body2.angularVelocity)),
+            body1.velocity),
+        Vec2.cross(this.r1, -body1.angularVelocity));
+
+    var impulse = Mat22.mulVec(this.m, Vec22.sub(Vec22.sub(this.bias, dv), Vec22.scale(this.p, this.softness)));
+
+    body1.velocity = Vec2.sub(body1.velocity, Vec2.scale(impulse, body1.inverseMass));
+    body1.angularVelocity -= body1.inverseDensity * Vec2.crossVec(this.r1, impulse);
+
+    body2.velocity = Vec2.add(body2.velocity, Vec2.scale(impulse, body2.inverseMass));
+    body2.angularVelocity += body2.inverseDensity * Vec2.crossVec(this.r2, impulse);
+
+    this.p = Vec2.add(this.p, impulse);
   };
 
 
@@ -722,8 +809,8 @@ var physics = (function() {
       var rn2 = Vec2.dot(r2, contact.normal);
       var kNormal = body1.inverseMass + body2.inverseMass;
       kNormal +=
-        body1.inverseDensity * (Vec2.dot(r1, r1) - rn1 * rn1) +
-        body2.inverseDensity * (Vec2.dot(r2, r2) - rn2 * rn2);
+          body1.inverseDensity * (Vec2.dot(r1, r1) - rn1 * rn1) +
+          body2.inverseDensity * (Vec2.dot(r2, r2) - rn2 * rn2);
       contact.massNormal = 1 / kNormal;
 
       var tangent = Vec2.cross(contact.normal, 1.0);
@@ -731,8 +818,8 @@ var physics = (function() {
       var rt2 = Vec2.dot(r2, tangent);
       var kTangent = body1.inverseMass + body2.inverseMass;
       kTangent +=
-        body1.inverseDensity * (Vec2.dot(r1, r1) - rt1 * rt1) +
-        body2.inverseDensity * (Vec2.dot(r2, r2) - rt2 * rt2);
+          body1.inverseDensity * (Vec2.dot(r1, r1) - rt1 * rt1) +
+          body2.inverseDensity * (Vec2.dot(r2, r2) - rt2 * rt2);
       contact.massTangent = 1 / kTangent;
 
       var adjustedSeparation = Math.min(0, contact.separation + Arbiter.ALLOWED_PENETRATION);
@@ -760,14 +847,13 @@ var physics = (function() {
 
       // Compute relative velocity at contact
       var dv = Vec2.sub(
-        Vec2.sub(
-          Vec2.add(body2.velocity, Vec2.cross(contact.r2, -body2.angularVelocity)),
-          body1.velocity),
-        Vec2.cross(contact.r1, -body1.angularVelocity));
+          Vec2.sub(
+              Vec2.add(body2.velocity, Vec2.cross(contact.r2, -body2.angularVelocity)),
+              body1.velocity),
+          Vec2.cross(contact.r1, -body1.angularVelocity));
 
       // Compute normal impulse
       var vn = Vec2.dot(dv, contact.normal);
-
       var dPn = contact.massNormal * (-vn + contact.bias);
 
       // Clamp the accumulated normal impulse
@@ -784,13 +870,12 @@ var physics = (function() {
       body2.velocity = Vec2.add(body2.velocity, Vec2.scale(Pn, body2.inverseMass));
       body2.angularVelocity += body2.inverseDensity * Vec2.crossVec(contact.r2, Pn);
 
-
       // Recompute relative velocity at contact
       dv = Vec2.sub(
-        Vec2.sub(
-          Vec2.add(body2.velocity, Vec2.cross(contact.r2, -body2.angularVelocity)),
-          body1.velocity),
-        Vec2.cross(contact.r1, -body1.angularVelocity));
+          Vec2.sub(
+              Vec2.add(body2.velocity, Vec2.cross(contact.r2, -body2.angularVelocity)),
+              body1.velocity),
+          Vec2.cross(contact.r1, -body1.angularVelocity));
 
       var tangent = Vec2.cross(contact.normal, 1.0);
       var vt = Vec2.dot(dv, tangent);
