@@ -43,12 +43,18 @@ var builder = (function() {
     box3.position = physics.Vec2.of(120, 340);
     box3.rotation = 0;
 
-    this.bodies = [ground, box1, box2, box3];
+    var b = new physics.Body(new physics.Box(20, 20), 2000);
+    b.position = physics.Vec2.of(440, 340);
+
+    var j = new physics.Joint(box1, b, physics.Vec2.of(440, 340));
+
+    this.bodies = [ground, box1, box2, box3, b];
 
     this.world = new physics.World();
     for (var i = 0; i < this.bodies.length; i++) {
       this.world.addBody(this.bodies[i]);
     }
+    this.world.addJoint(j);
 
     this.views = [];
     for (var i = 0; i < this.bodies.length; i++) {

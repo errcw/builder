@@ -99,7 +99,7 @@ var physics = (function() {
     return Mat22.of(m.e11, m.e21, m.e12, m.e22);
   };
 
-  Mat22.invert = function(m) {
+  Mat22.inverse = function(m) {
     var invDet = 1 / (m.e11 * m.e22 - m.e12 * m.e21);
     return Mat22.of(
         invDet * m.e22, -invDet * m.e12,
@@ -753,13 +753,16 @@ var physics = (function() {
   };
 
   Joint.prototype.applyImpulse = function() {
+    var body1 = this.body1;
+    var body2 = this.body2;
+
     var dv = Vec2.sub(
         Vec2.sub(
             Vec2.add(body2.velocity, Vec2.cross(this.r2, -body2.angularVelocity)),
             body1.velocity),
         Vec2.cross(this.r1, -body1.angularVelocity));
 
-    var impulse = Mat22.mulVec(this.m, Vec22.sub(Vec22.sub(this.bias, dv), Vec22.scale(this.p, this.softness)));
+    var impulse = Mat22.mulVec(this.m, Vec2.sub(Vec2.sub(this.bias, dv), Vec2.scale(this.p, this.softness)));
 
     body1.velocity = Vec2.sub(body1.velocity, Vec2.scale(impulse, body1.inverseMass));
     body1.angularVelocity -= body1.inverseDensity * Vec2.crossVec(this.r1, impulse);
@@ -1082,11 +1085,11 @@ var physics = (function() {
 
   return {
     Vec2: Vec2,
-    Mat22: Mat22,
     Box: Box,
     Circle: Circle,
     Body: Body,
-    collide: collide,
+    Joint: Joint,
     World: World,
+    collide: collide
   };
 })();
