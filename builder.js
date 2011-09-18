@@ -31,19 +31,19 @@ var builder = (function() {
     ground.position = physics.Vec2.of(Builder.WIDTH / 2, Builder.HEIGHT);
     ground.rotation = 0;
 
-    var box1 = new physics.Body(new physics.Box(20, 20), 2000);
+    var box1 = new physics.Body(new physics.Box(20, 20), 20000);
     box1.position = physics.Vec2.of(120, 420);
     box1.rotation = 0;
 
-    var box2 = new physics.Body(new physics.Box(20, 20), 2000);
+    var box2 = new physics.Body(new physics.Box(20, 20), 20000);
     box2.position = physics.Vec2.of(120, 380);
     box2.rotation = 0;
 
-    var box3 = new physics.Body(new physics.Box(20, 20), 2000);
+    var box3 = new physics.Body(new physics.Box(20, 20), 20000);
     box3.position = physics.Vec2.of(120, 340);
     box3.rotation = 0;
 
-    var b = new physics.Body(new physics.Box(20, 20), 2000);
+    var b = new physics.Body(new physics.Box(20, 20), 20000);
     b.position = physics.Vec2.of(420, 340);
 
     var j = new physics.Joint(ground, b, physics.Vec2.of(440, 340));
@@ -75,7 +75,7 @@ var builder = (function() {
       }
 
       // Otherwise start creating a new body
-      game.newBody = new physics.Body(new physics.Box(30, 30), 300);
+      game.newBody = new physics.Body(new physics.Box(30, 30), 20000);
       game.newBody.position = physics.Vec2.of(e.offsetX, e.offsetY);
       game.newBody.rotation = 0;
       game.views.push(createView(game.newBody));

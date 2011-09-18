@@ -941,8 +941,13 @@ var physics = (function() {
     this.bodies = [];
     this.arbiters = [];
     this.joints = [];
-    this.gravity = Vec2.of(0, 10);
   }
+
+  /**
+   * The gravitational force in the world.
+   * @const
+   */
+  World.GRAVITY = Vec2.of(0, 100);
 
   /**
    * Number of impulse iterations to apply each update step.
@@ -965,7 +970,7 @@ var physics = (function() {
         continue;
       }
 
-      var dv = Vec2.scale(Vec2.add(this.gravity, Vec2.scale(body.force, body.inverseDensity)), dt);
+      var dv = Vec2.scale(Vec2.add(World.GRAVITY, Vec2.scale(body.force, body.inverseDensity)), dt);
       body.velocity = Vec2.add(body.velocity, dv);
 
       body.angularVelocity += body.torque * body.inverseDensity * dt;
