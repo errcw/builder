@@ -44,9 +44,9 @@ var builder = (function() {
     box3.rotation = 0;
 
     var b = new physics.Body(new physics.Box(20, 20), 2000);
-    b.position = physics.Vec2.of(440, 340);
+    b.position = physics.Vec2.of(420, 340);
 
-    var j = new physics.Joint(box1, b, physics.Vec2.of(440, 340));
+    var j = new physics.Joint(ground, b, physics.Vec2.of(440, 340));
 
     this.bodies = [ground, box1, box2, box3, b];
 
