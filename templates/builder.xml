@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+  <ModulePrefs>
+    <Require feature="googleapis.client"/>
+    <Require feature="locked-domain"/>
+    <Require feature="views"/>
+  </ModulePrefs>
+<Content view="canvas" type="html"><![CDATA[
+  {% block contents %}
+    game contents go here
+  {% endblock %}
+  <script src='https://apis.google.com/js/appsapi.js'>
+    appsapi: { },
+    appsutil: {
+      apis_are_ready: function(loggedIn) {
+        builder.ready = true;
+      },
+      required_scopes: [
+        'https://www.googleapis.com/auth/plus.me',
+        'https://www.googleapis.com/auth/plus.people.recommended' ]
+    }
+  </script>
+]]>
+</Content>
+</Module>

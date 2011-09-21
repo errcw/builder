@@ -118,17 +118,19 @@ var builder = (function() {
    * @param ctx {object} The cavnas context to which to draw
    */
   Builder.prototype.draw = function(ctx) {
-    // Draw the background and border
+    // Draw the background
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, Builder.WIDTH, Builder.HEIGHT);
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 5;
-    ctx.strokeRect(0, 0, Builder.WIDTH, Builder.HEIGHT);
 
     // Draw the bodies
     for (var i = 0; i < this.views.length; i++) {
       this.views[i].draw(ctx);
     }
+
+    // Draw the border
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 5;
+    ctx.strokeRect(0, 0, Builder.WIDTH, Builder.HEIGHT);
   };
 
 
