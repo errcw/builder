@@ -7,7 +7,7 @@
     <Icon type="icon200x240">http://es-builder.appspot.com/static/icon200x240.png</Icon>
     <Icon type="icon32x39">http://es-builder.appspot.com/static/icon32x39.png</Icon>
     <Icon>http://es-builder.appspot.com/static/icon32x39.png</Icon>
-    <Container name="apps" />
+    <Container name="apps"/>
     <Url>http://es-builder.appspot.com/es</Url>
     <Scope ref="plus-me-scope"/>
     <Scope ref="plus-people-recommended-scope"/>

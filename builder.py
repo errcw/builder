@@ -2,7 +2,6 @@
 
 import os
 
-from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
@@ -14,7 +13,7 @@ def render_game(wrapper, request):
   path = os.path.join(os.path.dirname(__file__), 'templates', 'game.html')
   values = { 'wrapper': wrapper,
              'baseurl': base_url,
-            }
+           }
   return template.render(path, values)
 
 
@@ -25,14 +24,14 @@ class EsGadget(webapp.RequestHandler):
     self.response.out.write(render_game('builder.xml', self.request))
 
 
-class Builder(webapp.RequestHandler):
+class HtmlPage(webapp.RequestHandler):
   '''Renders the game as an HTML page for debugging.'''
   def get(self):
     self.response.headers['Content-Type'] = 'text/html'
     self.response.out.write(render_game('builder.html', self.request))
 
 
-application = webapp.WSGIApplication([('/', Builder),
+application = webapp.WSGIApplication([('/', HtmlPage),
                                       ('/es', EsGadget)],
                                      debug=True)
 
