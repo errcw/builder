@@ -691,11 +691,7 @@ var physics = (function() {
     this.softness = 0;
     this.p = Vec2.of(0, 0);
 
-    // Initialise the local anchor points
-    var rot1t = Mat22.transpose(Mat22.forRotation(body1.rotation));
-    var rot2t = Mat22.transpose(Mat22.forRotation(body2.rotation));
-    this.localAnchor1 = Mat22.mulVec(rot1t, Vec2.sub(anchor, body1.position));
-    this.localAnchor2 = Mat22.mulVec(rot2t, Vec2.sub(anchor, body2.position));
+    this.setAnchor(anchor);
   }
 
   /**
@@ -703,6 +699,17 @@ var physics = (function() {
    * @const
    */
   Joint.BIAS_FACTOR = 0.2;
+
+  /**
+   * Sets the anchor point of the joint.
+   * @param anchor {Vec2} The anchor point
+   */
+  Joint.prototype.setAnchor = function(anchor) {
+    var rot1t = Mat22.transpose(Mat22.forRotation(this.body1.rotation));
+    var rot2t = Mat22.transpose(Mat22.forRotation(this.body2.rotation));
+    this.localAnchor1 = Mat22.mulVec(rot1t, Vec2.sub(anchor, this.body1.position));
+    this.localAnchor2 = Mat22.mulVec(rot2t, Vec2.sub(anchor, this.body2.position));
+  };
 
   Joint.prototype.preStep = function(invDt) {
     var body1 = this.body1;
