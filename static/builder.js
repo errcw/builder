@@ -62,6 +62,12 @@ var builder = (function() {
     }
 
     this.pointer = new physics.Body(new physics.Box(1, 1), 1);
+    this.selection = {
+      body: null,
+      dx: 0,
+      dy: 0
+    };
+
     canvas.mousedown(function(e) {
       game.pointer.position = physics.Vec2.of(e.offsetX, e.offsetY);
 
@@ -70,6 +76,12 @@ var builder = (function() {
         var contacts = physics.collide(game.bodies[i], game.pointer);
         if (contacts.length > 0) {
           game.views[i].collided = true;
+
+          game.selection.body = game.bodies[i];
+          game.selection.position = game.selection.body.position;
+          game.selection.dx = e.offsetX - game.selection.body.position.x;
+          game.selection.dy = e.offsetY - game.selection.body.position.y;
+
           return;
         }
       }
@@ -80,16 +92,28 @@ var builder = (function() {
       game.newBody.rotation = 0;
       game.views.push(createView(game.newBody));
     });
+
     canvas.mousemove(function(e) {
+      if (game.selection.body != null) {
+        game.selection.position = physics.Vec2.of(
+            e.offsetX + game.selection.dx,
+            e.offsetY + game.selection.dy)
+      }
+
       if (game.newBody != null) {
         var sizeX = Math.abs(e.offsetX - game.newBody.position.x);
         var sizeY = Math.abs(e.offsetY - game.newBody.position.y);
         game.newBody.shape.setSize(sizeX, sizeY);
       }
     });
+
     canvas.mouseup(function(e) {
       for (var i = 0; i < game.bodies.length; i++) {
         game.views[i].collided = false;
+      }
+
+      if (game.selection.body != null) {
+        game.selection.body = null;
       }
 
       if (game.newBody != null) {
@@ -110,7 +134,28 @@ var builder = (function() {
    * @param dt {number} The elapsed time, in seconds, since the last update
    */
   Builder.prototype.update = function(dt) {
+    // Add a force to pull the selected piece to the pointer
+    if (this.selection.body != null) {
+      var toPointer = physics.Vec2.sub(
+          this.selection.position,
+          this.selection.body.position);
+      if (toPointer.x != 0 || toPointer.y != 0) {
+        var directionToPointer = physics.Vec2.normalize(toPointer);
+        var distanceToPointer = physics.Vec2.len(toPointer);
+        var force = physics.Vec2.scale(
+            directionToPointer,
+            distanceToPointer * 1000000000);
+        this.selection.body.force = force;
+      }
+    }
+
     this.world.update(dt);
+
+    // Force the selected piece to stop moving (prevents bad behavior)
+    if (this.selection.body != null) {
+      this.selection.body.velocity = physics.Vec2.of(0, 0);
+      this.selection.body.angularVelocity = 0;
+    }
   };
 
   /**
