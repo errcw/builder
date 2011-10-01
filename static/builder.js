@@ -14,6 +14,14 @@ var builder = (function() {
   Builder.HEIGHT = 480;
 
   /**
+   * Mode describing the behavior of the cursor.
+   */
+  Builder.Mode = {
+    SELECT: 1,
+    CREATE_BOX : 2
+  };
+
+  /**
    * Starts the game loop.
    */
   Builder.prototype.start = function() {
@@ -35,6 +43,8 @@ var builder = (function() {
       this.views.push(createView(this.world.bodies[i]));
     }
 
+
+    this.mode = Builder.Mode.SELECT;
     this.pointer = new physics.Body(new physics.Box(1, 1), 1);
     this.selection = {
       body: null,
@@ -42,58 +52,80 @@ var builder = (function() {
       dy: 0
     };
 
+    var toggle = $('#toggle');
+    toggle.click(function() {
+      toggle.toggleClass('move');
+      toggle.toggleClass('create');
+      game.mode = toggle.hasClass('move') ? Builder.Mode.SELECT : Builder.Mode.CREATE_BOX;
+    });
+
     canvas.mousedown(function(e) {
-      game.pointer.position = physics.Vec2.of(e.offsetX, e.offsetY);
+      switch (game.mode) {
+        case Builder.Mode.SELECT:
+          // Check for selection of an existing body
+          game.pointer.position = physics.Vec2.of(e.offsetX, e.offsetY);
+          for (var i = 0; i < game.world.bodies.length; i++) {
+            var contacts = physics.collide(game.world.bodies[i], game.pointer);
+            if (contacts.length > 0) {
+              //TODO prevent selecting immovable objects (ground)
+              game.views[i].collided = true;
 
-      // Check for selection of an existing body
-      for (var i = 0; i < game.world.bodies.length; i++) {
-        var contacts = physics.collide(game.world.bodies[i], game.pointer);
-        if (contacts.length > 0) {
-          game.views[i].collided = true;
+              game.selection.body = game.world.bodies[i];
+              game.selection.position = game.selection.body.position;
+              game.selection.dx = e.offsetX - game.selection.body.position.x;
+              game.selection.dy = e.offsetY - game.selection.body.position.y;
 
-          game.selection.body = game.world.bodies[i];
-          game.selection.position = game.selection.body.position;
-          game.selection.dx = e.offsetX - game.selection.body.position.x;
-          game.selection.dy = e.offsetY - game.selection.body.position.y;
-
-          return;
-        }
+              break;
+            }
+          }
+          break;
+        case Builder.Mode.CREATE_BOX:
+          // Start creating a new box
+          game.newBody = new physics.Body(new physics.Box(30, 30), 20000);
+          game.newBody.position = physics.Vec2.of(e.offsetX, e.offsetY);
+          game.newBody.rotation = 0;
+          game.views.push(createView(game.newBody));
+          break;
       }
-
-      // Otherwise start creating a new body
-      game.newBody = new physics.Body(new physics.Box(30, 30), 20000);
-      game.newBody.position = physics.Vec2.of(e.offsetX, e.offsetY);
-      game.newBody.rotation = 0;
-      game.views.push(createView(game.newBody));
     });
 
     canvas.mousemove(function(e) {
-      if (game.selection.body != null) {
-        game.selection.position = physics.Vec2.of(
-            e.offsetX + game.selection.dx,
-            e.offsetY + game.selection.dy)
-      }
-
-      if (game.newBody != null) {
-        var sizeX = Math.abs(e.offsetX - game.newBody.position.x);
-        var sizeY = Math.abs(e.offsetY - game.newBody.position.y);
-        game.newBody.shape.setSize(sizeX, sizeY);
+      switch (game.mode) {
+        case Builder.Mode.SELECT:
+          if (game.selection.body != null) {
+            game.selection.position = physics.Vec2.of(
+                e.offsetX + game.selection.dx,
+                e.offsetY + game.selection.dy)
+          }
+          break;
+        case Builder.Mode.CREATE_BOX:
+          if (game.newBody != null) {
+            var sizeX = Math.abs(e.offsetX - game.newBody.position.x);
+            var sizeY = Math.abs(e.offsetY - game.newBody.position.y);
+            game.newBody.shape.setSize(sizeX, sizeY);
+          }
+          break;
       }
     });
 
     canvas.mouseup(function(e) {
-      for (var i = 0; i < game.views.length; i++) {
-        game.views[i].collided = false;
-      }
+      switch (game.mode) {
+        case Builder.Mode.SELECT:
+          for (var i = 0; i < game.views.length; i++) {
+            game.views[i].collided = false;
+          }
+          if (game.selection.body != null) {
+            game.selection.body = null;
+          }
+          break;
 
-      if (game.selection.body != null) {
-        game.selection.body = null;
+        case Builder.Mode.CREATE_BOX:
+          if (game.newBody != null) {
+            game.world.addBody(game.newBody);
+          }
+          game.newBody = null;
+          break;
       }
-
-      if (game.newBody != null) {
-        game.world.addBody(game.newBody);
-      }
-      game.newBody = null;
     });
 
     setInterval(function() {
@@ -152,26 +184,26 @@ var builder = (function() {
   };
 
   /**
-   * Creates and returns an initial world.
+   * Creates and returns a world with some interesting initial state.
    */
   Builder.prototype.createWorld = function() {
     var world = new physics.World();
 
-    var ground = new physics.Body(new physics.Box(Builder.WIDTH, 40), Number.MAX_VALUE);
-    ground.position = physics.Vec2.of(Builder.WIDTH / 2, Builder.HEIGHT - 20);
+    var ground = new physics.Body(new physics.Box(Builder.WIDTH + 100, 50), Number.MAX_VALUE);
+    ground.position = physics.Vec2.of(Builder.WIDTH / 2, Builder.HEIGHT - 25);
     ground.rotation = 0;
     world.addBody(ground);
 
-    var spacing = 35;
-    var pyramidSize = 5;
+    var PYRAMID_HEIGHT = 5;
+    var PYRAMID_SPACING = 35;
 
     var yBase = ground.position.y - ground.shape.size.y - 5;
-    for (var row = 0; row < pyramidSize; row++) {
-      var cols = pyramidSize - row;
-      var xBase = (Builder.WIDTH / 2) - (cols / 2) * spacing;
+    for (var row = 0; row < PYRAMID_HEIGHT; row++) {
+      var cols = PYRAMID_HEIGHT - row;
+      var xBase = (Builder.WIDTH / 2) - (cols / 2) * PYRAMID_SPACING;
       for (var col = 0; col < cols; col++) {
         var box = new physics.Body(new physics.Box(30, 30), 20000);
-        box.position = physics.Vec2.of(xBase + col * spacing, yBase - row * spacing);
+        box.position = physics.Vec2.of(xBase + col * PYRAMID_SPACING, yBase - row * PYRAMID_SPACING);
         box.rotation = 0;
         world.addBody(box);
       }
@@ -219,11 +251,17 @@ var builder = (function() {
   };
 
   CircleView.prototype.draw = function(ctx) {
-    ctx.strokeStyle = this.collided ? '#ff0000' : '#000';
+    ctx.strokeStyle = this.collided ? '#ff0000' : '#555';
     ctx.fillStyle = '#eee';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(this.body.position.x, this.body.position.y, this.body.shape.radius, 0, Math.PI * 2, true);
+    ctx.arc(
+        this.body.position.x,
+        this.body.position.y,
+        this.body.shape.radius,
+        0,
+        Math.PI * 2,
+        true);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
@@ -270,8 +308,6 @@ var builder = (function() {
         $('#unsupported').fadeOut();
       });
     }
-    // Even if the game is not supported, try to start it regardless so that
-    // the unsupported banner has a background... maybe.
     new Builder().start();
   }
 
