@@ -46,11 +46,7 @@ var builder = (function() {
 
     this.mode = Builder.Mode.SELECT;
     this.pointer = new physics.Body(new physics.Box(1, 1), 1);
-    this.selection = {
-      body: null,
-      dx: 0,
-      dy: 0
-    };
+    this.selection = null;
 
     var toggle = $('#toggle');
     toggle.click(function() {
@@ -64,27 +60,41 @@ var builder = (function() {
         case Builder.Mode.SELECT:
           // Check for selection of an existing body
           game.pointer.position = physics.Vec2.of(e.offsetX, e.offsetY);
-          for (var i = 0; i < game.world.bodies.length; i++) {
-            var contacts = physics.collide(game.world.bodies[i], game.pointer);
-            if (contacts.length > 0) {
-              //TODO prevent selecting immovable objects (ground)
-              game.views[i].collided = true;
 
-              game.selection.body = game.world.bodies[i];
-              game.selection.position = game.selection.body.position;
-              game.selection.dx = e.offsetX - game.selection.body.position.x;
-              game.selection.dy = e.offsetY - game.selection.body.position.y;
+          for (var i = 0; i < game.world.bodies.length; i++) {
+            // Disallow selection of immovable objects (e.g., the ground)
+            if (game.world.bodies[i].mass == Number.MAX_VALUE) {
+              continue;
+            }
+
+            var contacts = physics.collide(game.world.bodies[i], game.pointer);
+
+            if (contacts.length > 0) {
+              var selected = game.world.bodies[i];
+
+              var selectedView = game.views[i];
+              selectedView.selected = true;
+
+              game.selection = {
+                body: selected,
+                view: selectedView,
+                position: selected.position,
+                dx: e.offsetX - selected.position.x,
+                dy: e.offsetY - selected.position.y
+              };
 
               break;
             }
           }
           break;
+
         case Builder.Mode.CREATE_BOX:
           // Start creating a new box
-          game.newBody = new physics.Body(new physics.Box(30, 30), 20000);
+          game.newBody = new physics.Body(new physics.Box(1, 1), 20000);
           game.newBody.position = physics.Vec2.of(e.offsetX, e.offsetY);
           game.newBody.rotation = 0;
           game.views.push(createView(game.newBody));
+          game.newBodyStart = physics.Vec2.of(e.offsetX, e.offsetY);
           break;
       }
     });
@@ -92,18 +102,25 @@ var builder = (function() {
     canvas.mousemove(function(e) {
       switch (game.mode) {
         case Builder.Mode.SELECT:
-          if (game.selection.body != null) {
-            game.selection.position = physics.Vec2.of(
-                e.offsetX + game.selection.dx,
-                e.offsetY + game.selection.dy)
+          if (!game.selection) {
+            return;
           }
+          // Update the position of the cursor
+          game.selection.position = physics.Vec2.of(
+              e.offsetX + game.selection.dx,
+              e.offsetY + game.selection.dy)
           break;
+
         case Builder.Mode.CREATE_BOX:
-          if (game.newBody != null) {
-            var sizeX = Math.abs(e.offsetX - game.newBody.position.x);
-            var sizeY = Math.abs(e.offsetY - game.newBody.position.y);
-            game.newBody.shape.setSize(sizeX, sizeY);
+          if (!game.newBody) {
+            return;
           }
+          // Update the size/position of the box
+          var dx = e.offsetX - game.newBodyStart.x;
+          var dy = e.offsetY - game.newBodyStart.y;
+          game.newBody.shape.setSize(Math.abs(dx), Math.abs(dy));
+          game.newBody.position.x = game.newBodyStart.x + dx * 0.5;
+          game.newBody.position.y = game.newBodyStart.y + dy * 0.5;
           break;
       }
     });
@@ -111,17 +128,39 @@ var builder = (function() {
     canvas.mouseup(function(e) {
       switch (game.mode) {
         case Builder.Mode.SELECT:
-          for (var i = 0; i < game.views.length; i++) {
-            game.views[i].collided = false;
+          if (!game.selection) {
+            return;
           }
-          if (game.selection.body != null) {
-            game.selection.body = null;
-          }
+          // Clear the selection
+          game.selection.view.selected = false;
+          game.selection = null;
           break;
 
         case Builder.Mode.CREATE_BOX:
-          if (game.newBody != null) {
-            game.world.addBody(game.newBody);
+          if (!game.newBody) {
+            return;
+          }
+
+          // Ensure the new box does not collide with anything in the world
+          var colliding = false;
+          for (var i = 0; i < game.world.bodies.length; i++) {
+            var contacts = physics.collide(game.world.bodies[i], game.newBody);
+            if (contacts.length > 0) {
+              colliding = true;
+              break;
+            }
+          }
+
+          // Remove the view for the temporary box
+          game.views.pop();
+
+          // Add the new box if it is viable
+          if (!colliding) {
+            var body = new physics.Body(game.newBody.shape, 20000);
+            body.position = game.newBody.position;
+            body.rotation = game.newBody.rotation;
+            game.world.addBody(body);
+            game.views.push(createView(body));
           }
           game.newBody = null;
           break;
@@ -140,13 +179,14 @@ var builder = (function() {
    */
   Builder.prototype.update = function(dt) {
     // Add a force to pull the selected piece to the pointer
-    if (this.selection.body != null) {
+    if (this.selection) {
       var toPointer = physics.Vec2.sub(
           this.selection.position,
           this.selection.body.position);
       if (toPointer.x != 0 || toPointer.y != 0) {
         var directionToPointer = physics.Vec2.normalize(toPointer);
         var distanceToPointer = physics.Vec2.len(toPointer);
+        //TODO force proportional to size/mass of body
         var force = physics.Vec2.scale(
             directionToPointer,
             distanceToPointer * 1000000000);
@@ -157,7 +197,7 @@ var builder = (function() {
     this.world.update(dt);
 
     // Force the selected piece to stop moving (prevents bad behavior)
-    if (this.selection.body != null) {
+    if (this.selection) {
       this.selection.body.velocity = physics.Vec2.of(0, 0);
       this.selection.body.angularVelocity = 0;
     }
@@ -212,6 +252,13 @@ var builder = (function() {
     return world;
   };
 
+  /**
+   * @return {Body} The first body in the world colliding with the given body
+   */
+  Builder.prototype.getFirstCollision = function(body) {
+    //TODO factor out some common code
+  };
+
 
   /**
    * Displays a body with a Box shape.
@@ -219,7 +266,7 @@ var builder = (function() {
    */
   function BoxView(body) {
     this.body = body;
-    this.collided = false;
+    this.selected = false;
   };
 
   BoxView.prototype.draw = function(ctx) {
@@ -228,7 +275,7 @@ var builder = (function() {
 
     ctx.save();
 
-    ctx.strokeStyle = this.collided ? '#ff0000' : '#555';
+    ctx.strokeStyle = this.selected ? '#ff0000' : '#555';
     ctx.fillStyle = '#eee';
     ctx.lineWidth = 1;
 
