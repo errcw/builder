@@ -10,35 +10,31 @@
 #canvas {
   background: #ccc;
 }
-div.banner {
-  display: none;
+div#selection-mode-toggle {
   position: absolute;
-  left: 0;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  background: #fff;
+  left: 10px;
+  top: 400px;
 }
-div.banner p {
-  padding: 1em 0.5em;
-  font-size: 16px;
-  text-align: center;
-  font-family: Georgia, Arial, serif;
-}
-a.button:link, a.button:visited {
-  color: #000;
-  background: #eee;
-  padding: 10px;
-  text-decoration: none;
-  border-radius: 5px;
-  box-shadow: 2px 2px #ccc;
-}
-a.button:hover {
-  background: #ddd;
-}
+
 #unsupported {
-  top: 200px;
+  display: none;
+  width: 100%;
+  margin-bottom: 5px;
+  text-align: center;
+  color: #fff;
+  background: #ff5d4f;
+  border-radius: 5px;
+  box-shadow: 2px 2px #CC7D76;
 }
+#unsupported p {
+  margin: 3px;
+  padding: 3px;
+}
+#unsupported a:link, #unsupported a:visited {
+  color: #fff;
+  font-weight: bold;
+}
+
 #footer p {
   font-size: 12px;
   font-family: Georgia, Arial, serif;
@@ -56,10 +52,12 @@ a.button:hover {
 </style>
 
 <div id='container'>
+  <div id='unsupported'>
+    <p>Builder may not work well in your browser. <a id='dismiss' href='#'>Dismiss</a></p>
+  </div>
   <canvas id='canvas' width='640' height='480'></canvas>
-  <div id='unsupported' class='banner'>
-    <p>Uh oh, you need a modern browser to play Builder.</p>
-    <p><a id='force-play' class='button' href='#'>Let me try to play anyway!</a></p>
+  <div id='selection-mode-toggle'>
+    SEL
   </div>
   <div id='footer'>
     <p>About <a href='http://go/buildergame'>Builder</a>.</p>

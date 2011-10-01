@@ -266,7 +266,7 @@ var builder = (function() {
   function start_() {
     if (!isSupported_()) {
       $('#unsupported').show();
-      $('#force-play').click(function() {
+      $('#dismiss').click(function() {
         $('#unsupported').fadeOut();
       });
     }
