@@ -27,38 +27,12 @@ var builder = (function() {
     // Work around http://bugs.jquery.com/ticket/9678
     setInterval(function() { }, 24*60*60*1000);
 
-    var ground = new physics.Body(new physics.Box(Builder.WIDTH, 40), Number.MAX_VALUE);
-    ground.position = physics.Vec2.of(Builder.WIDTH / 2, Builder.HEIGHT);
-    ground.rotation = 0;
 
-    var box1 = new physics.Body(new physics.Box(20, 20), 20000);
-    box1.position = physics.Vec2.of(120, 420);
-    box1.rotation = 0;
-
-    var box2 = new physics.Body(new physics.Box(20, 20), 20000);
-    box2.position = physics.Vec2.of(120, 380);
-    box2.rotation = 0;
-
-    var box3 = new physics.Body(new physics.Box(20, 20), 20000);
-    box3.position = physics.Vec2.of(120, 340);
-    box3.rotation = 0;
-
-    var b = new physics.Body(new physics.Box(20, 20), 20000);
-    b.position = physics.Vec2.of(420, 340);
-
-    var j = new physics.Joint(ground, b, physics.Vec2.of(440, 340));
-
-    this.bodies = [ground, box1, box2, box3, b];
-
-    this.world = new physics.World();
-    for (var i = 0; i < this.bodies.length; i++) {
-      this.world.addBody(this.bodies[i]);
-    }
-    this.world.addJoint(j);
+    this.world = this.createWorld();
 
     this.views = [];
-    for (var i = 0; i < this.bodies.length; i++) {
-      this.views.push(createView(this.bodies[i]));
+    for (var i = 0; i < this.world.bodies.length; i++) {
+      this.views.push(createView(this.world.bodies[i]));
     }
 
     this.pointer = new physics.Body(new physics.Box(1, 1), 1);
@@ -72,12 +46,12 @@ var builder = (function() {
       game.pointer.position = physics.Vec2.of(e.offsetX, e.offsetY);
 
       // Check for selection of an existing body
-      for (var i = 0; i < game.bodies.length; i++) {
-        var contacts = physics.collide(game.bodies[i], game.pointer);
+      for (var i = 0; i < game.world.bodies.length; i++) {
+        var contacts = physics.collide(game.world.bodies[i], game.pointer);
         if (contacts.length > 0) {
           game.views[i].collided = true;
 
-          game.selection.body = game.bodies[i];
+          game.selection.body = game.world.bodies[i];
           game.selection.position = game.selection.body.position;
           game.selection.dx = e.offsetX - game.selection.body.position.x;
           game.selection.dy = e.offsetY - game.selection.body.position.y;
@@ -108,7 +82,7 @@ var builder = (function() {
     });
 
     canvas.mouseup(function(e) {
-      for (var i = 0; i < game.bodies.length; i++) {
+      for (var i = 0; i < game.views.length; i++) {
         game.views[i].collided = false;
       }
 
@@ -117,7 +91,6 @@ var builder = (function() {
       }
 
       if (game.newBody != null) {
-        game.bodies.push(game.newBody);
         game.world.addBody(game.newBody);
       }
       game.newBody = null;
@@ -173,9 +146,38 @@ var builder = (function() {
     }
 
     // Draw the border
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 5;
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 3;
     ctx.strokeRect(0, 0, Builder.WIDTH, Builder.HEIGHT);
+  };
+
+  /**
+   * Creates and returns an initial world.
+   */
+  Builder.prototype.createWorld = function() {
+    var world = new physics.World();
+
+    var ground = new physics.Body(new physics.Box(Builder.WIDTH, 40), Number.MAX_VALUE);
+    ground.position = physics.Vec2.of(Builder.WIDTH / 2, Builder.HEIGHT - 20);
+    ground.rotation = 0;
+    world.addBody(ground);
+
+    var spacing = 35;
+    var pyramidSize = 5;
+
+    var yBase = ground.position.y - ground.shape.size.y - 5;
+    for (var row = 0; row < pyramidSize; row++) {
+      var cols = pyramidSize - row;
+      var xBase = (Builder.WIDTH / 2) - (cols / 2) * spacing;
+      for (var col = 0; col < cols; col++) {
+        var box = new physics.Body(new physics.Box(30, 30), 20000);
+        box.position = physics.Vec2.of(xBase + col * spacing, yBase - row * spacing);
+        box.rotation = 0;
+        world.addBody(box);
+      }
+    }
+
+    return world;
   };
 
 
@@ -194,9 +196,9 @@ var builder = (function() {
 
     ctx.save();
 
-    ctx.strokeStyle = this.collided ? '#ff0000' : '#000';
+    ctx.strokeStyle = this.collided ? '#ff0000' : '#555';
     ctx.fillStyle = '#eee';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 1;
 
     ctx.translate(this.body.position.x, this.body.position.y);
     ctx.rotate(this.body.rotation);
