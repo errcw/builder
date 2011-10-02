@@ -34,25 +34,31 @@
 
 #controls {
   position: relative;
-  left: 15px;
+  left: 10px;
   top: 470px;
   z-index: 1;
 }
-#controls .button {
+#controls button {
   width: 30px;
   height: 30px;
-  border-radius: 5px;
-  box-shadow: 2px 2px #ccc;
+  border: none;
   cursor: pointer;
 }
-
+#controls button:hover {
+  border-radius: 5px;
+  background-color: #fff;
+  box-shadow: 2px 2px #999;
+}
+#controls button:active {
+  margin: 1px 0 0 1px;
+  background-color: #fff;
+  box-shadow: none;
+}
 #controls .move {
   background: url({{baseurl}}static/cursor_move.png) no-repeat 2px 2px;
-  background-color: #fff;
 }
 #controls .create {
   background: url({{baseurl}}static/cursor_create.png) no-repeat 2px 2px;
-  background-color: #fff;
 }
 
 #footer p {
@@ -76,7 +82,7 @@
     <p>Builder may not work well in your browser. <a id='dismiss' href='#'>Dismiss</a></p>
   </div>
   <div id='controls'>
-    <div id='toggle' class='button move'></div>
+    <button id='toggle' class='button move'/>
   </div>
   <canvas id='canvas' width='640' height='480'></canvas>
   <div id='footer'>

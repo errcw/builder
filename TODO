@@ -2,13 +2,13 @@ To Do
 -----
 - Show when a new box is invalid
 - Improve the selection view (thicker line? glow?)
-- Improve the toggle button (animation? hover?)
 - Add a sharing button
 - Implement serialization/deserialization for sharing
 - Add a tutorial
 - Tweak the world parameters (friction? gravity?)
 - Remove boxes that have fallen outside the view
 - Add icons (favicon, ES icons)
+- Fix mouse out-of-canvas behavior
 
 
 Notes
