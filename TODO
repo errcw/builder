@@ -1,7 +1,6 @@
 To Do
 -----
 - Show when a new box is invalid
-- Improve the selection view (thicker line? glow?)
 - Add a sharing button
 - Implement serialization/deserialization for sharing
 - Add a tutorial

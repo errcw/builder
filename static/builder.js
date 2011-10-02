@@ -68,7 +68,7 @@ var builder = (function() {
             break;
           }
 
-          var selectedView = game.getView(selected);
+          var selectedView = game.highlightView(selected);
           selectedView.selected = true;
 
           game.selection = {
@@ -249,12 +249,17 @@ var builder = (function() {
   };
 
   /**
+   * Highlights the view of the given body (i.e., causes it to be drawn last
+   * such that no other body may obscure it).
    * @return {object} The view of the given body
    */
-  Builder.prototype.getView = function(body) {
+  Builder.prototype.highlightView = function(body) {
     for (var i = 0; i < this.views.length; i++) {
       if (this.views[i].body == body) {
-        return this.views[i];
+        var highlightedView = this.views[i];
+        this.views[i] = this.views[this.views.length - 1];
+        this.views[this.views.length - 1] = highlightedView;
+        return highlightedView;
       }
     }
     return null;
@@ -276,9 +281,9 @@ var builder = (function() {
 
     ctx.save();
 
-    ctx.strokeStyle = this.selected ? '#ff0000' : '#555';
+    ctx.strokeStyle = this.selected ? '#111' : '#555';
     ctx.fillStyle = '#eee';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = this.selected ? 3 : 1;
 
     ctx.translate(this.body.position.x, this.body.position.y);
     ctx.rotate(this.body.rotation);
