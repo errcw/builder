@@ -1,0 +1,32 @@
+To Do
+-----
+- Factor out collision detection code
+- Show when a new box is invalid
+- Improve the selection view (thicker line? glow?)
+- Improve the toggle button (animation? hover?)
+- Add a sharing button
+- Implement serialization/deserialization for sharing
+- Add a tutorial
+- Tweak the world parameters (friction? gravity?)
+- Remove boxes that have fallen outside the view
+- Add icons (favicon, ES icons)
+
+
+Notes
+-----
+- serialize bodies (position, rotation, shape parameters)
+  * JSON? will JSON.stringify(list) be sufficient?
+  * custom? parse to simple data, then JSONify
+- deserialize bodies and add them to the world
+  * will jitter be a problem for stacked bodies? is there some way to cope?
+- can the data be passed via url params alone?
+- alternative is to build a store on app engine; also allows storing previews
+  * worlds/id.json
+  * worlds/id.png
+  * prevents client-only/static serving
+- colours?
+- tutorial
+  * click and drag to move
+  * hit toggle to enter creation mode
+  * click and drag to create (add bad creation prevention)
+  * hit toggle to go back to selection mode
