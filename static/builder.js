@@ -134,7 +134,7 @@ var builder = (function() {
           }
 
           // Ensure the new box does not collide with anything in the world
-          var collision = this.getCollidingBody(game.newBody);
+          var collision = game.getCollidingBody(game.newBody);
 
           // Remove the view for the temporary box
           game.views.pop();
