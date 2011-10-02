@@ -186,10 +186,9 @@ var builder = (function() {
       if (toPointer.x != 0 || toPointer.y != 0) {
         var directionToPointer = physics.Vec2.normalize(toPointer);
         var distanceToPointer = physics.Vec2.len(toPointer);
-        //TODO force proportional to size/mass of body
         var force = physics.Vec2.scale(
             directionToPointer,
-            distanceToPointer * 1000000000);
+            distanceToPointer * this.selection.body.density * 500);
         this.selection.body.force = force;
       }
     }
