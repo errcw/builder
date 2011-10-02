@@ -61,31 +61,23 @@ var builder = (function() {
           // Check for selection of an existing body
           game.pointer.position = physics.Vec2.of(e.offsetX, e.offsetY);
 
-          for (var i = 0; i < game.world.bodies.length; i++) {
-            // Disallow selection of immovable objects (e.g., the ground)
-            if (game.world.bodies[i].mass == Number.MAX_VALUE) {
-              continue;
-            }
+          var selected = game.getCollidingBody(game.pointer);
 
-            var contacts = physics.collide(game.world.bodies[i], game.pointer);
-
-            if (contacts.length > 0) {
-              var selected = game.world.bodies[i];
-
-              var selectedView = game.views[i];
-              selectedView.selected = true;
-
-              game.selection = {
-                body: selected,
-                view: selectedView,
-                position: selected.position,
-                dx: e.offsetX - selected.position.x,
-                dy: e.offsetY - selected.position.y
-              };
-
-              break;
-            }
+          // Disallow selection of immovable objects (e.g., the ground)
+          if (!selected || selected.mass == Number.MAX_VALUE) {
+            break;
           }
+
+          var selectedView = game.getView(selected);
+          selectedView.selected = true;
+
+          game.selection = {
+            body: selected,
+            view: selectedView,
+            position: selected.position,
+            dx: e.offsetX - selected.position.x,
+            dy: e.offsetY - selected.position.y
+          };
           break;
 
         case Builder.Mode.CREATE_BOX:
@@ -142,20 +134,13 @@ var builder = (function() {
           }
 
           // Ensure the new box does not collide with anything in the world
-          var colliding = false;
-          for (var i = 0; i < game.world.bodies.length; i++) {
-            var contacts = physics.collide(game.world.bodies[i], game.newBody);
-            if (contacts.length > 0) {
-              colliding = true;
-              break;
-            }
-          }
+          var collision = this.getCollidingBody(game.newBody);
 
           // Remove the view for the temporary box
           game.views.pop();
 
           // Add the new box if it is viable
-          if (!colliding) {
+          if (!collision) {
             var body = new physics.Body(game.newBody.shape, 20000);
             body.position = game.newBody.position;
             body.rotation = game.newBody.rotation;
@@ -254,8 +239,25 @@ var builder = (function() {
   /**
    * @return {Body} The first body in the world colliding with the given body
    */
-  Builder.prototype.getFirstCollision = function(body) {
-    //TODO factor out some common code
+  Builder.prototype.getCollidingBody = function(body) {
+    for (var i = 0; i < this.world.bodies.length; i++) {
+      var contacts = physics.collide(this.world.bodies[i], body);
+      if (contacts.length > 0) {
+        return this.world.bodies[i];
+      }
+    }
+  };
+
+  /**
+   * @return {object} The view of the given body
+   */
+  Builder.prototype.getView = function(body) {
+    for (var i = 0; i < this.views.length; i++) {
+      if (this.views[i].body == body) {
+        return this.views[i];
+      }
+    }
+    return null;
   };
 
 

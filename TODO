@@ -1,6 +1,5 @@
 To Do
 -----
-- Factor out collision detection code
 - Show when a new box is invalid
 - Improve the selection view (thicker line? glow?)
 - Improve the toggle button (animation? hover?)
