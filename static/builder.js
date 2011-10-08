@@ -85,8 +85,8 @@ var builder = (function() {
           game.newBody = new physics.Body(new physics.Box(1, 1), 20000);
           game.newBody.position = physics.Vec2.of(e.offsetX, e.offsetY);
           game.newBody.rotation = 0;
-          game.views.push(createView(game.newBody));
           game.newBodyStart = physics.Vec2.of(e.offsetX, e.offsetY);
+          game.newBodyView = createView(game.newBody);
           break;
       }
     });
@@ -97,7 +97,6 @@ var builder = (function() {
           if (!game.selection) {
             return;
           }
-          // Update the position of the cursor
           game.selection.position = physics.Vec2.of(
               e.offsetX + game.selection.dx,
               e.offsetY + game.selection.dy)
@@ -113,6 +112,7 @@ var builder = (function() {
           game.newBody.shape.setSize(Math.abs(dx), Math.abs(dy));
           game.newBody.position.x = game.newBodyStart.x + dx * 0.5;
           game.newBody.position.y = game.newBodyStart.y + dy * 0.5;
+          game.newBodyView.invalid = !game.canCreate(game.newBody);
           break;
       }
     });
@@ -133,14 +133,8 @@ var builder = (function() {
             return;
           }
 
-          // Ensure the new box does not collide with anything in the world
-          var collision = game.getCollidingBody(game.newBody);
-
-          // Remove the view for the temporary box
-          game.views.pop();
-
           // Add the new box if it is viable
-          if (!collision) {
+          if (game.canCreate(game.newBody)) {
             var body = new physics.Body(game.newBody.shape, 20000);
             body.position = game.newBody.position;
             body.rotation = game.newBody.rotation;
@@ -148,6 +142,7 @@ var builder = (function() {
             game.views.push(createView(body));
           }
           game.newBody = null;
+          game.newBodyView = null;
           break;
       }
     });
@@ -199,6 +194,10 @@ var builder = (function() {
     // Draw the bodies
     for (var i = 0; i < this.views.length; i++) {
       this.views[i].draw(ctx);
+    }
+
+    if (this.newBodyView != null) {
+      this.newBodyView.draw(ctx);
     }
 
     // Draw the border
@@ -265,6 +264,13 @@ var builder = (function() {
     return null;
   };
 
+  /**
+   * @return {boolean} If it is safe to add the given body to the world
+   */
+  Builder.prototype.canCreate = function(body) {
+    return this.getCollidingBody(body) == null;
+  };
+
 
   /**
    * Displays a body with a Box shape.
@@ -273,6 +279,7 @@ var builder = (function() {
   function BoxView(body) {
     this.body = body;
     this.selected = false;
+    this.invalid = false;
   };
 
   BoxView.prototype.draw = function(ctx) {
@@ -281,7 +288,7 @@ var builder = (function() {
 
     ctx.save();
 
-    ctx.strokeStyle = this.selected ? '#111' : '#555';
+    ctx.strokeStyle = this.selected ? '#111' : this.invalid ? '#ff0000' : '#555';
     ctx.fillStyle = '#eee';
     ctx.lineWidth = this.selected ? 3 : 1;
 
