@@ -35,14 +35,12 @@ var builder = (function() {
     // Work around http://bugs.jquery.com/ticket/9678
     setInterval(function() { }, 24*60*60*1000);
 
-
     this.world = this.createWorld();
 
     this.views = [];
     for (var i = 0; i < this.world.bodies.length; i++) {
       this.views.push(createView(this.world.bodies[i]));
     }
-
 
     this.mode = Builder.Mode.SELECT;
     this.pointer = new physics.Body(new physics.Box(1, 1), 1);
@@ -55,97 +53,10 @@ var builder = (function() {
       game.mode = toggle.hasClass('move') ? Builder.Mode.SELECT : Builder.Mode.CREATE_BOX;
     });
 
-    canvas.mousedown(function(e) {
-      switch (game.mode) {
-        case Builder.Mode.SELECT:
-          // Check for selection of an existing body
-          game.pointer.position = physics.Vec2.of(e.offsetX, e.offsetY);
-
-          var selected = game.getCollidingBody(game.pointer);
-
-          // Disallow selection of immovable objects (e.g., the ground)
-          if (!selected || selected.mass == Number.MAX_VALUE) {
-            break;
-          }
-
-          var selectedView = game.highlightView(selected);
-          selectedView.selected = true;
-
-          game.selection = {
-            body: selected,
-            view: selectedView,
-            position: selected.position,
-            dx: selected.position.x - e.offsetX,
-            dy: selected.position.y - e.offsetY
-          };
-          break;
-
-        case Builder.Mode.CREATE_BOX:
-          // Start creating a new box
-          game.newBody = new physics.Body(new physics.Box(1, 1), 20000);
-          game.newBody.position = physics.Vec2.of(e.offsetX, e.offsetY);
-          game.newBody.rotation = 0;
-          game.newBodyStart = physics.Vec2.of(e.offsetX, e.offsetY);
-          game.newBodyView = createView(game.newBody);
-          break;
-      }
-    });
-
-    canvas.mousemove(function(e) {
-      switch (game.mode) {
-        case Builder.Mode.SELECT:
-          if (!game.selection) {
-            return;
-          }
-          game.selection.position = physics.Vec2.of(
-              e.offsetX + game.selection.dx,
-              e.offsetY + game.selection.dy)
-          break;
-
-        case Builder.Mode.CREATE_BOX:
-          if (!game.newBody) {
-            return;
-          }
-          // Update the size/position of the box
-          var dx = e.offsetX - game.newBodyStart.x;
-          var dy = e.offsetY - game.newBodyStart.y;
-          game.newBody.shape.setSize(Math.abs(dx), Math.abs(dy));
-          game.newBody.position.x = game.newBodyStart.x + dx * 0.5;
-          game.newBody.position.y = game.newBodyStart.y + dy * 0.5;
-          game.newBodyView.invalid = !game.canCreate(game.newBody);
-          break;
-      }
-    });
-
-    canvas.mouseup(function(e) {
-      switch (game.mode) {
-        case Builder.Mode.SELECT:
-          if (!game.selection) {
-            return;
-          }
-          // Clear the selection
-          game.selection.view.selected = false;
-          game.selection = null;
-          break;
-
-        case Builder.Mode.CREATE_BOX:
-          if (!game.newBody) {
-            return;
-          }
-
-          // Add the new box if it is viable
-          if (game.canCreate(game.newBody)) {
-            var body = new physics.Body(game.newBody.shape, 20000);
-            body.position = game.newBody.position;
-            body.rotation = game.newBody.rotation;
-            game.world.addBody(body);
-            game.views.push(createView(body));
-          }
-          game.newBody = null;
-          game.newBodyView = null;
-          break;
-      }
-    });
+    canvas.mousedown(function(e) { game.onMouseDown(e); });
+    canvas.mousemove(function(e) { game.onMouseMove(e); });
+    canvas.mouseup(function(e) { game.onMouseUp(e); });
+    canvas.mouseleave(function(e) { game.onMouseUp(e); });
 
     setInterval(function() {
       game.update(frameTimeInSeconds);
@@ -204,6 +115,124 @@ var builder = (function() {
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 3;
     ctx.strokeRect(0, 0, Builder.WIDTH, Builder.HEIGHT);
+  };
+
+  /**
+   * Handles when the mouse is clicked.
+   * @param e Mouse event data
+   */
+  Builder.prototype.onMouseDown = function(e) {
+    switch (this.mode) {
+      case Builder.Mode.SELECT:
+        // Check for selection of an existing body
+        this.pointer.position = physics.Vec2.of(e.offsetX, e.offsetY);
+
+        var selected = this.getCollidingBody(this.pointer);
+
+        // Disallow selection of immovable objects (e.g., the ground)
+        if (!selected || selected.mass == Number.MAX_VALUE) {
+          break;
+        }
+
+        var selectedView = this.highlightView(selected);
+        selectedView.selected = true;
+
+        this.selection = {
+          body: selected,
+          view: selectedView,
+          position: selected.position,
+          dx: selected.position.x - e.offsetX,
+          dy: selected.position.y - e.offsetY
+        };
+        break;
+
+      case Builder.Mode.CREATE_BOX:
+        // Start creating a new box
+        this.newBody = new physics.Body(new physics.Box(1, 1), 20000);
+        this.newBody.position = physics.Vec2.of(e.offsetX, e.offsetY);
+        this.newBody.rotation = 0;
+        this.newBodyStart = physics.Vec2.of(e.offsetX, e.offsetY);
+        this.newBodyView = createView(this.newBody);
+        break;
+    }
+  };
+
+  /**
+   * Handles when the mouse is moved.
+   * @param e Mouse event data
+   */
+  Builder.prototype.onMouseMove = function(e) {
+    switch (this.mode) {
+      case Builder.Mode.SELECT:
+        if (!this.selection) {
+          return;
+        }
+        this.selection.position = physics.Vec2.of(
+            e.offsetX + this.selection.dx,
+            e.offsetY + this.selection.dy)
+        break;
+
+      case Builder.Mode.CREATE_BOX:
+        if (!this.newBody) {
+          return;
+        }
+        // Update the size/position of the box
+        var dx = e.offsetX - this.newBodyStart.x;
+        var dy = e.offsetY - this.newBodyStart.y;
+        this.newBody.shape.setSize(Math.abs(dx), Math.abs(dy));
+        this.newBody.position.x = this.newBodyStart.x + dx * 0.5;
+        this.newBody.position.y = this.newBodyStart.y + dy * 0.5;
+        this.newBodyView.invalid = !this.canCreate(this.newBody);
+        break;
+    }
+  };
+
+  /**
+   * Handles when the mouse is released, or leaves the canvas.
+   * @param e Mouse event data
+   */
+  Builder.prototype.onMouseUp = function(e) {
+    switch (this.mode) {
+      case Builder.Mode.SELECT:
+        if (!this.selection) {
+          return;
+        }
+
+        // Apply a final force
+        var toPointer = physics.Vec2.sub(
+            this.selection.position,
+            this.selection.body.position);
+        if (toPointer.x != 0 || toPointer.y != 0) {
+          var directionToPointer = physics.Vec2.normalize(toPointer);
+          var distanceToPointer = physics.Vec2.len(toPointer);
+          var force = physics.Vec2.scale(
+              directionToPointer,
+              distanceToPointer * this.selection.body.density * 200);
+          this.selection.body.force = force;
+        }
+
+        // Clear the selection
+        this.selection.view.selected = false;
+        this.selection = null;
+        break;
+
+      case Builder.Mode.CREATE_BOX:
+        if (!this.newBody) {
+          return;
+        }
+
+        // Add the new box if it is viable
+        if (this.canCreate(this.newBody)) {
+          var body = new physics.Body(this.newBody.shape, 20000);
+          body.position = this.newBody.position;
+          body.rotation = this.newBody.rotation;
+          this.world.addBody(body);
+          this.views.push(createView(body));
+        }
+        this.newBody = null;
+        this.newBodyView = null;
+        break;
+    }
   };
 
   /**
