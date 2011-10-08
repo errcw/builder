@@ -75,8 +75,8 @@ var builder = (function() {
             body: selected,
             view: selectedView,
             position: selected.position,
-            dx: e.offsetX - selected.position.x,
-            dy: e.offsetY - selected.position.y
+            dx: selected.position.x - e.offsetX,
+            dy: selected.position.y - e.offsetY
           };
           break;
 
