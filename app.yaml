@@ -11,6 +11,8 @@ handlers:
   upload: static/favicon.ico
 - url: /(es)?
   script: builder.py
+- url: /worlds/.*
+  script: worlds.py
 
 builtins:
 - datastore_admin: on
