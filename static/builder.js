@@ -55,8 +55,8 @@ var builder = (function() {
 
     canvas.mousedown(function(e) { game.onMouseDown(e); });
     canvas.mousemove(function(e) { game.onMouseMove(e); });
-    canvas.mouseup(function(e) { game.onMouseUp(e); });
-    canvas.mouseleave(function(e) { game.onMouseUp(e); });
+    canvas.mouseup(function(e) { game.onMouseUp(e, false); });
+    canvas.mouseleave(function(e) { game.onMouseUp(e, true); });
 
     setInterval(function() {
       game.update(frameTimeInSeconds);
@@ -190,8 +190,9 @@ var builder = (function() {
   /**
    * Handles when the mouse is released, or leaves the canvas.
    * @param e Mouse event data
+   * @param didLeave {boolean} If this event fired because the mouse left
    */
-  Builder.prototype.onMouseUp = function(e) {
+  Builder.prototype.onMouseUp = function(e, didLeave) {
     switch (this.mode) {
       case Builder.Mode.SELECT:
         if (!this.selection) {
@@ -199,16 +200,18 @@ var builder = (function() {
         }
 
         // Apply a final force
-        var toPointer = physics.Vec2.sub(
-            this.selection.position,
-            this.selection.body.position);
-        if (toPointer.x != 0 || toPointer.y != 0) {
-          var directionToPointer = physics.Vec2.normalize(toPointer);
-          var distanceToPointer = physics.Vec2.len(toPointer);
-          var force = physics.Vec2.scale(
-              directionToPointer,
-              distanceToPointer * this.selection.body.density * 200);
-          this.selection.body.force = force;
+        if (!didLeave) {
+          var toPointer = physics.Vec2.sub(
+              this.selection.position,
+              this.selection.body.position);
+          if (toPointer.x != 0 || toPointer.y != 0) {
+            var directionToPointer = physics.Vec2.normalize(toPointer);
+            var distanceToPointer = physics.Vec2.len(toPointer);
+            var force = physics.Vec2.scale(
+                directionToPointer,
+                distanceToPointer * this.selection.body.density * 200);
+            this.selection.body.force = force;
+          }
         }
 
         // Clear the selection
@@ -222,7 +225,7 @@ var builder = (function() {
         }
 
         // Add the new box if it is viable
-        if (this.canCreate(this.newBody)) {
+        if (!didLeave && this.canCreate(this.newBody)) {
           var body = new physics.Body(this.newBody.shape, 20000);
           body.position = this.newBody.position;
           body.rotation = this.newBody.rotation;
