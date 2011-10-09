@@ -32,33 +32,39 @@
   font-weight: bold;
 }
 
-#controls {
-  position: relative;
-  left: 10px;
-  top: 470px;
-  z-index: 1;
-}
-#controls button {
+a.button {
   width: 30px;
   height: 30px;
-  border: none;
-  cursor: pointer;
+  display: block;
 }
-#controls button:hover {
+a.button:hover {
   border-radius: 5px;
-  background-color: #fdfdfd;
   box-shadow: 2px 2px #999;
+  background-color: #fdfdfd;
 }
-#controls button:active {
-  margin: 1px 0 0 1px;
+a.button:active {
+  margin-left: 1px;
   background-color: #fff;
   box-shadow: none;
 }
-#controls .move {
+#toggle {
+  position: relative;
+  left: 10px;
+  top: 500px;
+}
+#share {
+  position: relative;
+  left: 600px;
+  top: 470px;
+}
+.move {
   background: url({{baseurl}}static/cursor_move.png) no-repeat 2px 2px;
 }
-#controls .create {
+.create {
   background: url({{baseurl}}static/cursor_create.png) no-repeat 2px 2px;
+}
+.share {
+  background: url({{baseurl}}static/share.png) no-repeat 2px 2px;
 }
 
 #footer p {
@@ -81,9 +87,8 @@
   <div id='unsupported'>
     <p>Builder may not work well in your browser. <a id='dismiss' href='#'>Dismiss</a></p>
   </div>
-  <div id='controls'>
-    <button id='toggle' class='move'/>
-  </div>
+  <a id='toggle' class='button move'></a>
+  <a id='share' class='button share'></a>
   <canvas id='canvas' width='640' height='480'></canvas>
   <div id='footer'>
     <p>About <a href='http://go/buildergame'>Builder</a>.</p>
@@ -95,8 +100,8 @@
   _gaq.push(['_setAccount', 'UA-25858332-1']);
   _gaq.push(['_trackPageview']);
 </script>
-<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js'></script>
 <script src='http://www.google-analytics.com/ga.js'></script>
+<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js'></script>
 
 <script src='{{ baseurl }}static/physics.js'></script>
 <script src='{{ baseurl }}static/builder.js'></script>
