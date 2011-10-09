@@ -291,8 +291,19 @@ var builder = (function() {
    */
   Builder.prototype.getWorldThumbnail = function() {
     var canvas = $('#canvas')[0];
-    var image = canvas.toDataURL();
-    return image;
+
+    var scale = 6;
+    var scaledWidth = Math.round(canvas.width / scale);
+    var scaledHeight = Math.round(canvas.height / scale);
+
+    var scaledCanvas = document.createElement('canvas');
+    scaledCanvas.width = scaledWidth;
+    scaledCanvas.height = scaledHeight;
+
+    var scaledCtx = scaledCanvas.getContext('2d');
+    scaledCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, scaledWidth, scaledHeight);
+    
+    return scaledCanvas.toDataURL();
   };
 
 
