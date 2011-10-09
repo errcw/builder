@@ -1,11 +1,15 @@
 To Do
 -----
-- Add a sharing button
-- Implement serialization/deserialization for sharing
+- Add world serialization
+- Add world deserialization (from tag?)
+- Add G+ sharing integration
 - Add a tutorial
 - Tweak the world parameters (friction? gravity?)
 - Remove boxes that have fallen outside the view
-- Try G+ colours
+- Clean up the art
+  * Better share button?
+  * Better G+ icons?
+  * Try G+ colours?
 
 Notes
 -----

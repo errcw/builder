@@ -91,7 +91,7 @@ class WorldUploader(webapp.RequestHandler):
     self.response.headers['Content-Type'] = 'application/json'
     self.response.out.write(json.dumps({
       'id': id,
-      'thumbnail_url': '/worlds/thumbnails/' + id
+      'thumbnail_url': 'worlds/thumbnails/' + id
     }))
 
 

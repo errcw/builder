@@ -57,7 +57,7 @@ var builder = (function() {
     share.click(function() {
       $.ajax({
         type: 'POST',
-        url: 'http://localhost:8080/worlds/', //TODO
+        url: builder.baseUrl + 'worlds/',
         data: {
           'world': game.getSerializedWorld(),
           'thumbnail': game.getWorldThumbnail()
