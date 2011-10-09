@@ -53,6 +53,18 @@ var builder = (function() {
       game.mode = toggle.hasClass('move') ? Builder.Mode.SELECT : Builder.Mode.CREATE_BOX;
     });
 
+    var share = $('#share');
+    share.click(function() {
+      $.ajax({
+        type: 'POST',
+        url: 'http://localhost:8080/worlds/', //TODO
+        data: {
+          'world': game.getSerializedWorld(),
+          'thumbnail': game.getWorldThumbnail()
+        }
+      });
+    });
+
     canvas.mousedown(function(e) { game.onMouseDown(e); });
     canvas.mousemove(function(e) { game.onMouseMove(e); });
     canvas.mouseup(function(e) { game.onMouseUp(e, false); });
@@ -266,6 +278,23 @@ var builder = (function() {
 
     return world;
   };
+
+  /**
+   * @return A JSON-stringified version of the current world state. 
+   */
+  Builder.prototype.getSerializedWorld = function() {
+    return '{}';
+  };
+
+  /**
+   * @return A data url encoding a thumbnail of the current world state.
+   */
+  Builder.prototype.getWorldThumbnail = function() {
+    var canvas = $('#canvas')[0];
+    var image = canvas.toDataURL();
+    return image;
+  };
+
 
   /**
    * @return {Body} The first body in the world colliding with the given body

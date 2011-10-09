@@ -1,8 +1,9 @@
 '''Models worlds.'''
 
 import base64
-import re
 import os
+import re
+import simplejson as json
 import uuid
 
 from google.appengine.ext import db
@@ -81,6 +82,7 @@ class WorldUploader(webapp.RequestHandler):
 
     world = World(
         key_name = id,
+        id = id,
         world = world_data_json,
         thumbnail = db.Blob(thumbnail))
     world.put()
