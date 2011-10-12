@@ -4,7 +4,7 @@
     <Name>Builder</Name>
     <Description>Play with toy blocks</Description>
     <Icon type="billboard768x435">http://es-builder.appspot.com/static/billboard768x435.png</Icon>
-    <Icon type="icon200x240">http://es-builder.appspot.com/static/icon200x240.png</Icon>
+    <Icon type="icon70x84">http://es-builder.appspot.com/static/icon70x84.png</Icon>
     <Icon type="icon32x39">http://es-builder.appspot.com/static/icon32x39.png</Icon>
     <Icon>http://es-builder.appspot.com/static/icon32x39.png</Icon>
     <Container name="apps"/>

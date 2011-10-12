@@ -7,8 +7,7 @@ var builder = (function() {
    * Builder game.
    * @constructor
    */
-  function Builder() {
-  }
+  function Builder() { }
 
   Builder.WIDTH = 640;
   Builder.HEIGHT = 480;
@@ -61,6 +60,18 @@ var builder = (function() {
         data: {
           'world': game.getSerializedWorld(),
           'thumbnail': game.getWorldThumbnail()
+        },
+        success: function(response) {
+          google.sendPost({
+            title: 'Check out what I built!',
+            body: 'Come check out what I built!',
+            anchorText: 'Check It Out',
+            params: {id: response.id},
+            images: [builder.baseUrl + response.thumbnail_url]
+          });
+        },
+        error: function() {
+          showError_('Uh oh, there was a problem sharing your work.');
         }
       });
     });
@@ -280,7 +291,7 @@ var builder = (function() {
   };
 
   /**
-   * @return A JSON-stringified version of the current world state. 
+   * @return A JSON-stringified version of the current world state.
    */
   Builder.prototype.getSerializedWorld = function() {
     return '{}';
@@ -302,7 +313,7 @@ var builder = (function() {
 
     var scaledCtx = scaledCanvas.getContext('2d');
     scaledCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, scaledWidth, scaledHeight);
-    
+
     return scaledCanvas.toDataURL();
   };
 
@@ -372,6 +383,10 @@ var builder = (function() {
     ctx.restore();
   };
 
+  BoxView.createColor = function(r, g, b) {
+    return 'rgb( ' + Math.round(r) + ', ' + Math.round(g) + ', ' + Math.round(b) + ')';
+  };
+
 
   /**
    * Displays a body with a Circle shape.
@@ -425,6 +440,18 @@ var builder = (function() {
   };
 
   /**
+   * Displays a dismissable error bar above the game.
+   * @param text {string} The error text to show the user
+   */
+  function showError_(text) {
+    $('#error-text').text(text);
+    $('#error-bar').fadeIn();
+      $('#dismiss').click(function() {
+        $('#error-bar').fadeOut();
+      });
+  }
+
+  /**
    * Indicates that external parts of the page are ready for the game to start.
    * @type {boolean}
    */
@@ -435,10 +462,7 @@ var builder = (function() {
    */
   function start_() {
     if (!isSupported_()) {
-      $('#unsupported').show();
-      $('#dismiss').click(function() {
-        $('#unsupported').fadeOut();
-      });
+      showError_('Builder may not work well in your browser.');
     }
     new Builder().start();
   }
