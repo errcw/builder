@@ -13,7 +13,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 class World(db.Model):
   '''A world.'''
   id = db.StringProperty(required=True)
-  world = db.StringProperty(required=True)
+  world = db.TextProperty(required=True)
   thumbnail = db.BlobProperty()
 
   @classmethod
