@@ -22,19 +22,21 @@ var builder = (function() {
 
   /**
    * Starts the game loop.
+   * @param initialWorldData The initial world state to use, or none for a fresh world
    */
-  Builder.prototype.start = function() {
+  Builder.prototype.start = function(initialWorldData) {
     var game = this;
-    var canvas = $('#canvas');
+    this.canvas = $('#canvas');
 
     var frameTimeInMillis = 1000 / 60;
     var frameTimeInSeconds = frameTimeInMillis / 1000;
-    var context = canvas[0].getContext('2d');
+    var context = this.canvas[0].getContext('2d');
 
-    // Work around http://bugs.jquery.com/ticket/9678
-    setInterval(function() { }, 24*60*60*1000);
-
-    this.world = this.createWorld();
+    if (initialWorldData) {
+      this.world = this.getDeserializedWorld(initialWorldData);
+    } else {
+      this.world = this.createWorld();
+    }
 
     this.views = [];
     for (var i = 0; i < this.world.bodies.length; i++) {
@@ -62,6 +64,7 @@ var builder = (function() {
           'thumbnail': game.getWorldThumbnail()
         },
         success: function(response) {
+          console.log('Uploaded world ' + response.id);
           google.sendPost({
             title: 'Check out what I built!',
             body: 'Come check out what I built!',
@@ -76,10 +79,10 @@ var builder = (function() {
       });
     });
 
-    canvas.mousedown(function(e) { game.onMouseDown(e); });
-    canvas.mousemove(function(e) { game.onMouseMove(e); });
-    canvas.mouseup(function(e) { game.onMouseUp(e, false); });
-    canvas.mouseleave(function(e) { game.onMouseUp(e, true); });
+    this.canvas.mousedown(function(e) { game.onMouseDown(e); });
+    this.canvas.mousemove(function(e) { game.onMouseMove(e); });
+    this.canvas.mouseup(function(e) { game.onMouseUp(e, false); });
+    this.canvas.mouseleave(function(e) { game.onMouseUp(e, true); });
 
     setInterval(function() {
       game.update(frameTimeInSeconds);
@@ -145,10 +148,12 @@ var builder = (function() {
    * @param e Mouse event data
    */
   Builder.prototype.onMouseDown = function(e) {
+    var mx = e.pageX - this.canvas.offset().left;
+    var my = e.pageY - this.canvas.offset().top;
     switch (this.mode) {
       case Builder.Mode.SELECT:
         // Check for selection of an existing body
-        this.pointer.position = physics.Vec2.of(e.offsetX, e.offsetY);
+        this.pointer.position = physics.Vec2.of(mx, my);
 
         var selected = this.getCollidingBody(this.pointer);
 
@@ -164,17 +169,17 @@ var builder = (function() {
           body: selected,
           view: selectedView,
           position: selected.position,
-          dx: selected.position.x - e.offsetX,
-          dy: selected.position.y - e.offsetY
+          dx: selected.position.x - mx,
+          dy: selected.position.y - my
         };
         break;
 
       case Builder.Mode.CREATE_BOX:
         // Start creating a new box
         this.newBody = new physics.Body(new physics.Box(1, 1), 20000);
-        this.newBody.position = physics.Vec2.of(e.offsetX, e.offsetY);
+        this.newBody.position = physics.Vec2.of(mx, my);
         this.newBody.rotation = 0;
-        this.newBodyStart = physics.Vec2.of(e.offsetX, e.offsetY);
+        this.newBodyStart = physics.Vec2.of(mx, my);
         this.newBodyView = createView(this.newBody);
         break;
     }
@@ -185,14 +190,16 @@ var builder = (function() {
    * @param e Mouse event data
    */
   Builder.prototype.onMouseMove = function(e) {
+    var mx = e.pageX - this.canvas.offset().left;
+    var my = e.pageY - this.canvas.offset().top;
     switch (this.mode) {
       case Builder.Mode.SELECT:
         if (!this.selection) {
           return;
         }
         this.selection.position = physics.Vec2.of(
-            e.offsetX + this.selection.dx,
-            e.offsetY + this.selection.dy)
+            mx + this.selection.dx,
+            my + this.selection.dy)
         break;
 
       case Builder.Mode.CREATE_BOX:
@@ -200,8 +207,8 @@ var builder = (function() {
           return;
         }
         // Update the size/position of the box
-        var dx = e.offsetX - this.newBodyStart.x;
-        var dy = e.offsetY - this.newBodyStart.y;
+        var dx = mx - this.newBodyStart.x;
+        var dy = my - this.newBodyStart.y;
         this.newBody.shape.setSize(Math.abs(dx), Math.abs(dy));
         this.newBody.position.x = this.newBodyStart.x + dx * 0.5;
         this.newBody.position.y = this.newBodyStart.y + dy * 0.5;
@@ -294,25 +301,62 @@ var builder = (function() {
    * @return A JSON-stringified version of the current world state.
    */
   Builder.prototype.getSerializedWorld = function() {
-    return '{}';
+    var bodies = [];
+    for (var i = 0; i < this.world.bodies.length; i++) {
+      var body = this.world.bodies[i];
+      bodies.push({
+        x: body.position.x,
+        y: body.position.y,
+        r: body.rotation,
+        m: body.mass,
+        w: body.shape.size.x,
+        h: body.shape.size.y
+      });
+    }
+
+    return JSON.stringify({
+      version: 1,
+      bodies: bodies
+    });
+  };
+
+  /**
+   * @param worldData A world in JSON format, from getSerializedWorld
+   * @return {World} A world parsed from its JSON representation
+   */
+  Builder.prototype.getDeserializedWorld = function(worldData) {
+    var world = new physics.World();
+
+    for (var i = 0; i < worldData.bodies.length; i++) {
+      var bodyData = worldData.bodies[i];
+      var box = new physics.Body(new physics.Box(bodyData.w, bodyData.h), bodyData.m);
+      box.position = physics.Vec2.of(bodyData.x, bodyData.y);
+      box.rotation = bodyData.r;
+      world.addBody(box);
+    }
+
+    return world;
   };
 
   /**
    * @return A data url encoding a thumbnail of the current world state.
    */
   Builder.prototype.getWorldThumbnail = function() {
-    var canvas = $('#canvas')[0];
-
     var scale = 6;
-    var scaledWidth = Math.round(canvas.width / scale);
-    var scaledHeight = Math.round(canvas.height / scale);
+    var scaledWidth = Math.round(this.canvas.width / scale);
+    var scaledHeight = Math.round(this.canvas.height / scale);
 
     var scaledCanvas = document.createElement('canvas');
     scaledCanvas.width = scaledWidth;
     scaledCanvas.height = scaledHeight;
 
     var scaledCtx = scaledCanvas.getContext('2d');
-    scaledCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, scaledWidth, scaledHeight);
+    scaledCtx.drawImage(
+        this.canvas,
+        0, 0,
+        this.canvas.width, this.canvas.height,
+        0, 0,
+        scaledWidth, scaledHeight);
 
     return scaledCanvas.toDataURL();
   };
@@ -435,8 +479,8 @@ var builder = (function() {
   function isSupported_() {
     var canvas = document.createElement('canvas');
     var supportsCanvas = !!(canvas.getContext);
-    var supportsText = !!(supportsCanvas && typeof canvas.getContext('2d').fillText === 'function');
-    return supportsCanvas && supportsText;
+    var supportsCors = !!('withCredentials' in new XMLHttpRequest());
+    return supportsCanvas && supportsCors;
   };
 
   /**
@@ -452,10 +496,15 @@ var builder = (function() {
   }
 
   /**
-   * Indicates that external parts of the page are ready for the game to start.
-   * @type {boolean}
+   * @return {string} Id of the world to load, taken from the page
    */
-  var ready_ = false;
+  function getWorldIdToLoad_() {
+    var worldHash = window.location.hash;
+    if (worldHash) {
+      return worldHash.substring(1);
+    }
+    return null;
+  }
 
   /**
    * Starts the game loop.
@@ -464,11 +513,23 @@ var builder = (function() {
     if (!isSupported_()) {
       showError_('Builder may not work well in your browser.');
     }
-    new Builder().start();
+
+    var worldId = getWorldIdToLoad_();
+    if (worldId) {
+      $.ajax({
+        url: builder.baseUrl + 'worlds/data/' + worldId,
+        success: function(world) {
+          new Builder().start(world);
+        },
+        error: function() {
+          showError_('Uh oh, there was a problem loading the world.');
+          new Builder().start();
+        }
+      });
+    } else {
+      new Builder().start();
+    }
   }
 
-  return {
-    ready: ready_,
-    start: start_
-  }
+  return { start: start_ }
 })();
