@@ -1,14 +1,12 @@
 To Do
 -----
-- Add world serialization
-- Add world deserialization (from tag?)
 - Add a tutorial
 - Tweak the world parameters (friction? gravity?)
 - Remove boxes that have fallen outside the view
 - Clean up the art
   * Better share button?
   * Better G+ icons?
-  * Try G+ colours?
+  * Maintain colours across creation, save/load
 - Any way to avoid uploading a unique world every share?
 
 Notes

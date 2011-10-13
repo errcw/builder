@@ -407,7 +407,22 @@ var builder = (function() {
     this.body = body;
     this.selected = false;
     this.invalid = false;
+    if (body.mass < Number.MAX_VALUE) {
+      this.colour = Math.floor(Math.random() * (BoxView.COLOURS.length - 1));
+    } else {
+      this.colour = BoxView.GREY;
+    }
   };
+
+  BoxView.COLOURS = [
+    {fill: '#6E8DC4', border: '#51688E'},
+    {fill: '#DA4936', border: '#963025'},
+    {fill: '#41B148', border: '#2E7A31'},
+    {fill: '#F6AA37', border: '#AF7927'},
+    // Reserved for immovable and invalid bodies
+    {fill: '#EEEEEE', border: '#555555'},
+  ];
+  BoxView.GREY = BoxView.COLOURS.length - 1;
 
   BoxView.prototype.draw = function(ctx) {
     var width = this.body.shape.size.x;
@@ -415,9 +430,10 @@ var builder = (function() {
 
     ctx.save();
 
-    ctx.strokeStyle = this.selected ? '#111' : this.invalid ? '#ff0000' : '#555';
-    ctx.fillStyle = '#eee';
+    var colours = BoxView.COLOURS[this.invalid ? BoxView.GREY : this.colour];
     ctx.lineWidth = this.selected ? 3 : 1;
+    ctx.strokeStyle = this.selected ? '#111' : colours.border;
+    ctx.fillStyle = colours.fill;
 
     ctx.translate(this.body.position.x, this.body.position.y);
     ctx.rotate(this.body.rotation);
