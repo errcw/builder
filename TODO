@@ -1,28 +1,6 @@
 To Do
 -----
 - Add a tutorial
-- Tweak the world parameters (friction? gravity?)
 - Clean up the art
   * Better share button?
   * Better G+ icons?
-  * Maintain colours across creation, save/load
-- Any way to avoid uploading a unique world every share?
-
-Notes
------
-- serialize bodies (position, rotation, shape parameters)
-  * JSON? will JSON.stringify(list) be sufficient?
-  * custom? parse to simple data, then JSONify
-- deserialize bodies and add them to the world
-  * will jitter be a problem for stacked bodies? is there some way to cope?
-- can the data be passed via url params alone?
-- alternative is to build a store on app engine; also allows storing previews
-  * worlds/id.json
-  * worlds/id.png
-  * prevents client-only/static serving
-- colours?
-- tutorial
-  * click and drag to move
-  * hit toggle to enter creation mode
-  * click and drag to create (add bad creation prevention)
-  * hit toggle to go back to selection mode

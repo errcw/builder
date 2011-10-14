@@ -665,7 +665,7 @@ var physics = (function() {
     this.angularVelocity = 0;
     this.force = Vec2.of(0, 0);
     this.torque = 0;
-    this.friction = 0.2;
+    this.friction = 0.4;
 
     this.mass = mass;
     if (this.mass < Number.MAX_VALUE) {
@@ -743,7 +743,7 @@ var physics = (function() {
     k.e11 += this.softness;
     k.e22 += this.softness;
 
-    this.m = Mat22.inverse(k); 
+    this.m = Mat22.inverse(k);
 
     var p1 = Vec2.add(body1.position, this.r1);
     var p2 = Vec2.add(body2.position, this.r2);
@@ -954,7 +954,7 @@ var physics = (function() {
    * The gravitational force in the world.
    * @const
    */
-  World.GRAVITY = Vec2.of(0, 100);
+  World.GRAVITY = Vec2.of(0, 200);
 
   /**
    * Number of impulse iterations to apply each update step.
