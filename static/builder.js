@@ -69,7 +69,7 @@ var builder = (function() {
             title: 'Check out what I built!',
             body: 'Come check out what I built!',
             anchorText: 'Check It Out',
-            params: {id: response.id},
+            params: {worldId: response.id},
             images: [builder.baseUrl + response.thumbnail_url]
           });
         },
@@ -260,7 +260,10 @@ var builder = (function() {
           body.position = this.newBody.position;
           body.rotation = this.newBody.rotation;
           this.world.addBody(body);
-          this.views.push(createView(body));
+
+          var view = createView(body);
+          view.colour = this.newBodyView.colour;
+          this.views.push(view);
         }
         this.newBody = null;
         this.newBodyView = null;
@@ -342,9 +345,11 @@ var builder = (function() {
    * @return A data url encoding a thumbnail of the current world state.
    */
   Builder.prototype.getWorldThumbnail = function() {
+    var canvas = this.canvas[0];
+
     var scale = 6;
-    var scaledWidth = Math.round(this.canvas.width / scale);
-    var scaledHeight = Math.round(this.canvas.height / scale);
+    var scaledWidth = Math.round(canvas.width / scale);
+    var scaledHeight = Math.round(canvas.height / scale);
 
     var scaledCanvas = document.createElement('canvas');
     scaledCanvas.width = scaledWidth;
@@ -352,9 +357,9 @@ var builder = (function() {
 
     var scaledCtx = scaledCanvas.getContext('2d');
     scaledCtx.drawImage(
-        this.canvas,
+        canvas,
         0, 0,
-        this.canvas.width, this.canvas.height,
+        canvas.width, canvas.height,
         0, 0,
         scaledWidth, scaledHeight);
 
@@ -515,9 +520,14 @@ var builder = (function() {
    * @return {string} Id of the world to load, taken from the page
    */
   function getWorldIdToLoad_() {
-    var worldHash = window.location.hash;
-    if (worldHash) {
-      return worldHash.substring(1);
+    if (window.gadgets) {
+      var params = gadgets.views.getParams();
+      return params['worldId'];
+    } else {
+      var worldHash = window.location.hash;
+      if (worldHash) {
+        return worldHash.substring(1);
+      }
     }
     return null;
   }
