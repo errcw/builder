@@ -455,7 +455,7 @@ var builder = (function() {
     {fill: '#41B148', border: '#2E7A31'},
     {fill: '#F6AA37', border: '#AF7927'},
     // Reserved for immovable and invalid bodies
-    {fill: '#EEEEEE', border: '#555555'},
+    {fill: '#FCFCFc', border: '#111111'},
   ];
   BoxView.GREY = BoxView.COLOURS.length - 1;
 

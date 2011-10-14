@@ -41,12 +41,17 @@
   text-decoration: none;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 8);
   border-radius: 0.2em;
+  cursor: pointer;
+  overflow: visible;
 }
 .button:hover {
   background-color: #f9f9f9;
 }
 .button:active {
   background-color: #ddd;
+}
+.button:visited {
+  color: #333;
 }
 .button:before {
   background: #ccc;
@@ -57,7 +62,7 @@
   font-size: 1.5em;
   margin: 0 1em 0 -1em;
   padding: 0 0.2em;
-  box-shadow: 1px 0 0 rgba(0,0,0,.5), 2px 0 0 rgba(255,255,255,.5);
+  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.5), 2px 0 0 rgba(255, 255, 255, 0.5);
   border-radius: 0.15em 0 0 0.15em;
   pointer-events: none;
 }
@@ -74,7 +79,7 @@
 #toggle {
   position: relative;
   top: -54px;
-  width: 85px;
+  width: 135px;
 }
 #share {
   position: relative;
@@ -103,10 +108,10 @@
     <p><span id='error-text'>Builder may not work well in your browser.</span> <a id='dismiss' href='#'>Dismiss</a></p>
   </div>
   <canvas id='canvas' width='640' height='480'></canvas>
-  <a href='#' id='toggle' class='button move'>Move</a>
-  <a href='#' id='share' class='button share'>Share</a>
+  <button id='toggle' class='button move'>Move</button>
+  <button id='share' class='button share'>Share</button>
   <div id='footer'>
-    <p>About <a href='http://go/buildergame'>Builder</a>.</p>
+    <p>About <a href='http://go/buildergame' target='_blank'>Builder</a>.</p>
   </div>
 </div>
 
