@@ -10,7 +10,6 @@ var builder = (function() {
    */
   function Builder(initialWorldData) {
     var game = this;
-    this.canvas = $('#canvas');
 
     if (initialWorldData) {
       this.world = this.getDeserializedWorld(initialWorldData);
@@ -22,6 +21,8 @@ var builder = (function() {
     for (var i = 0; i < this.world.bodies.length; i++) {
       this.views.push(createView(this.world.bodies[i]));
     }
+
+    this.cleanTicks = Builder.WORLD_CLEAN_TICK_INTERVAL;
 
     this.mode = Builder.Mode.SELECT;
     this.pointer = new physics.Body(new physics.Box(1, 1), 1);
@@ -59,22 +60,25 @@ var builder = (function() {
       });
     });
 
+    this.canvas = $('#canvas');
     this.canvas.mousedown(function(e) { game.onMouseDown(e); });
     this.canvas.mousemove(function(e) { game.onMouseMove(e); });
     this.canvas.mouseup(function(e) { game.onMouseUp(e, false); });
     this.canvas.mouseleave(function(e) { game.onMouseUp(e, true); });
   }
 
+  /** Width and height of the canvas, in pixels. */
   Builder.WIDTH = 640;
   Builder.HEIGHT = 480;
 
-  /**
-   * Mode describing the behavior of the cursor.
-   */
+  /** Mode describing the behavior of the cursor. */
   Builder.Mode = {
     SELECT: 1,
     CREATE_BOX : 2
   };
+
+  /** Number of updates between world cleaning. */
+  Builder.WORLD_CLEAN_TICK_INTERVAL = 60;
 
   /**
    * Starts the game loop running at 60 FPS.
@@ -118,6 +122,22 @@ var builder = (function() {
     if (this.selection) {
       this.selection.body.velocity = physics.Vec2.of(0, 0);
       this.selection.body.angularVelocity = 0;
+    }
+
+    // Remove objects outside the frame
+    this.cleanTicks -= 1;
+    if (this.cleanTicks <= 0) {
+      var bodiesToRemove = [];
+      for (var i = 0; i < this.world.bodies.length; i++) {
+        var body = this.world.bodies[i];
+        if (body.position.y > Builder.HEIGHT * 2) {
+          bodiesToRemove.push(body);
+        }
+      }
+      for (var i = 0; i < bodiesToRemove.length; i++) {
+        this.world.removeBody(bodiesToRemove[i]);
+      }
+      this.cleanTicks = Builder.WORLD_CLEAN_TICK_INTERVAL;
     }
   };
 
