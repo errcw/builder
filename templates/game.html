@@ -9,8 +9,6 @@
 }
 #canvas {
   background: #ccc;
-  box-shadow: 3px 3px #ddd;
-  z-index: 0;
 }
 
 #error-bar {
@@ -32,39 +30,56 @@
   font-weight: bold;
 }
 
-a.button {
-  width: 30px;
-  height: 30px;
-  display: block;
+.button {
+  display: inline-block;
+  color: #333;
+  background-color: #eee;
+  border: 1px solid #777;
+  padding: 0 1.5em;
+  margin: 0.5em;
+  font: bold 1em/2em Georgia, serif;
+  text-decoration: none;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 8);
+  border-radius: 0.2em;
 }
-a.button:hover {
-  border-radius: 5px;
-  box-shadow: 2px 2px #999;
-  background-color: #fdfdfd;
+.button:hover {
+  background-color: #f9f9f9;
 }
-a.button:active {
-  margin-left: 1px;
-  background-color: #fff;
-  box-shadow: none;
+.button:active {
+  background-color: #ddd;
 }
+.button:before {
+  background: #ccc;
+  background: rgba(0, 0, 0, 0.1);
+  float: left;
+  width: 1em;
+  text-align: center;
+  font-size: 1.5em;
+  margin: 0 1em 0 -1em;
+  padding: 0 0.2em;
+  box-shadow: 1px 0 0 rgba(0,0,0,.5), 2px 0 0 rgba(255,255,255,.5);
+  border-radius: 0.15em 0 0 0.15em;
+  pointer-events: none;
+}
+.move:before {
+  content: "\2194";
+}
+.create:before {
+  content: "\2737";
+}
+.share:before {
+  content: "\2605";
+}
+
 #toggle {
   position: relative;
-  left: 10px;
-  top: 500px;
+  top: -54px;
+  width: 85px;
 }
 #share {
   position: relative;
-  left: 600px;
-  top: 470px;
-}
-.move {
-  background: url({{baseurl}}static/cursor_move.png) no-repeat 2px 2px;
-}
-.create {
-  background: url({{baseurl}}static/cursor_create.png) no-repeat 2px 2px;
-}
-.share {
-  background: url({{baseurl}}static/share.png) no-repeat 2px 2px;
+  left: 340px;
+  top: -54px;
 }
 
 #footer p {
@@ -87,9 +102,9 @@ a.button:active {
   <div id='error-bar'>
     <p><span id='error-text'>Builder may not work well in your browser.</span> <a id='dismiss' href='#'>Dismiss</a></p>
   </div>
-  <a id='toggle' class='button move'></a>
-  <a id='share' class='button share'></a>
   <canvas id='canvas' width='640' height='480'></canvas>
+  <a href='#' id='toggle' class='button move'>Move</a>
+  <a href='#' id='share' class='button share'>Share</a>
   <div id='footer'>
     <p>About <a href='http://go/buildergame'>Builder</a>.</p>
   </div>

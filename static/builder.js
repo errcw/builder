@@ -30,9 +30,17 @@ var builder = (function() {
 
     var toggle = $('#toggle');
     toggle.click(function() {
-      toggle.toggleClass('move');
-      toggle.toggleClass('create');
-      game.mode = toggle.hasClass('move') ? Builder.Mode.SELECT : Builder.Mode.CREATE_BOX;
+      if (game.mode === Builder.Mode.SELECT) {
+        game.mode = Builder.Mode.CREATE_BOX;
+        toggle.addClass('create');
+        toggle.removeClass('move');
+        toggle.text('Create');
+      } else if (game.mode === Builder.Mode.CREATE_BOX) {
+        game.mode = Builder.Mode.SELECT;
+        toggle.addClass('move');
+        toggle.removeClass('create');
+        toggle.text('Move');
+      }
     });
 
     var share = $('#share');
