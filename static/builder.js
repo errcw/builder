@@ -5,32 +5,12 @@ var builder = (function() {
 
   /**
    * Builder game.
+   * @param initialWorldData The initial world state to use, or none for a fresh world
    * @constructor
    */
-  function Builder() { }
-
-  Builder.WIDTH = 640;
-  Builder.HEIGHT = 480;
-
-  /**
-   * Mode describing the behavior of the cursor.
-   */
-  Builder.Mode = {
-    SELECT: 1,
-    CREATE_BOX : 2
-  };
-
-  /**
-   * Starts the game loop.
-   * @param initialWorldData The initial world state to use, or none for a fresh world
-   */
-  Builder.prototype.start = function(initialWorldData) {
+  function Builder(initialWorldData) {
     var game = this;
     this.canvas = $('#canvas');
-
-    var frameTimeInMillis = 1000 / 60;
-    var frameTimeInSeconds = frameTimeInMillis / 1000;
-    var context = this.canvas[0].getContext('2d');
 
     if (initialWorldData) {
       this.world = this.getDeserializedWorld(initialWorldData);
@@ -83,6 +63,28 @@ var builder = (function() {
     this.canvas.mousemove(function(e) { game.onMouseMove(e); });
     this.canvas.mouseup(function(e) { game.onMouseUp(e, false); });
     this.canvas.mouseleave(function(e) { game.onMouseUp(e, true); });
+  }
+
+  Builder.WIDTH = 640;
+  Builder.HEIGHT = 480;
+
+  /**
+   * Mode describing the behavior of the cursor.
+   */
+  Builder.Mode = {
+    SELECT: 1,
+    CREATE_BOX : 2
+  };
+
+  /**
+   * Starts the game loop running at 60 FPS.
+   */
+  Builder.prototype.start = function() {
+    var frameTimeInMillis = 1000 / 60;
+    var frameTimeInSeconds = frameTimeInMillis / 1000;
+
+    var game = this;
+    var context = this.canvas[0].getContext('2d');
 
     setInterval(function() {
       game.update(frameTimeInSeconds);
@@ -545,7 +547,7 @@ var builder = (function() {
       $.ajax({
         url: builder.baseUrl + 'worlds/data/' + worldId,
         success: function(world) {
-          new Builder().start(world);
+          new Builder(world).start();
         },
         error: function() {
           showError_('Uh oh, there was a problem loading the world.');
