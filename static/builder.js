@@ -11,6 +11,7 @@ var builder = (function() {
   function Builder(initialWorldData) {
     var game = this;
 
+    // Build the world
     if (initialWorldData) {
       this.world = this.getDeserializedWorld(initialWorldData);
     } else {
@@ -24,23 +25,23 @@ var builder = (function() {
 
     this.cleanTicks = Builder.WORLD_CLEAN_TICK_INTERVAL;
 
+    // Build the interaction data
     this.mode = Builder.Mode.SELECT;
     this.pointer = new physics.Body(new physics.Box(1, 1), 1);
     this.selection = null;
 
-    var toggle = $('#toggle');
-    toggle.click(function() {
-      if (game.mode === Builder.Mode.SELECT) {
-        game.mode = Builder.Mode.CREATE_BOX;
-        toggle.addClass('create');
-        toggle.removeClass('move');
-        toggle.text('Create');
-      } else if (game.mode === Builder.Mode.CREATE_BOX) {
-        game.mode = Builder.Mode.SELECT;
-        toggle.addClass('move');
-        toggle.removeClass('create');
-        toggle.text('Move');
-      }
+    // Add the button handlers
+    var move = $('#move');
+    var create = $('#create');
+    move.click(function() {
+      game.mode = Builder.Mode.SELECT;
+      move.addClass('active');
+      create.removeClass('active');
+    });
+    create.click(function() {
+      game.mode = Builder.Mode.CREATE_BOX;
+      create.addClass('active');
+      move.removeClass('active');
     });
 
     var share = $('#share');
@@ -68,6 +69,7 @@ var builder = (function() {
       });
     });
 
+    // Add the canvas handlers
     this.canvas = $('#canvas');
     this.canvas.mousedown(function(e) { game.onMouseDown(e); });
     this.canvas.mousemove(function(e) { game.onMouseMove(e); });
