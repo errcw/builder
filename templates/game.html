@@ -1,14 +1,18 @@
 {% extends wrapper %}
 {% block contents %}
 <style type='text/css'>
+body {
+  background-color: #F8F8F8;
+}
 #container {
   width: 640px;
   height: 500px;
   margin: 0 auto;
-  font-family: Georgia, Arial, serif;
+  font-family: Arial, serif;
 }
 #canvas {
   background: #ccc;
+  margin-top: 10px;
 }
 
 #error-bar {
@@ -37,7 +41,7 @@
   border: 1px solid #777;
   padding: 0 1.5em;
   margin: 0.5em;
-  font: bold 1em/2em Georgia, serif;
+  font: bold 1em/2em arial, serif;
   text-decoration: none;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 8);
   border-radius: 0.2em;
@@ -66,8 +70,13 @@
   border-radius: 0.15em 0 0 0.15em;
   pointer-events: none;
 }
+.button.active:before {
+  background: #333;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 8);
+}
 .move:before {
-  content: "\2194";
+  content: "\219D";
 }
 .create:before {
   content: "\2737";
@@ -80,22 +89,33 @@ button::-moz-focus-inner {
   padding: 0;
 }
 
-#toggle {
+#move {
   position: relative;
   top: -54px;
-  width: 140px;
+}
+#move:before {
+  content: "\219D";
+}
+#create {
+  position: relative;
+  top: -54px;
+  left: -10px;
+}
+#create:before {
+  content: "\2737";
 }
 #share {
   position: relative;
-  left: 334px;
+  left: 200px;
   top: -54px;
+}
+#share:before {
+  content: "\2605";
 }
 
 #footer p {
   font-size: 12px;
-  font-family: Georgia, Arial, serif;
-  margin: 5px 0 0 0;
-  padding: 0;
+  margin-top: -45px;
   text-align: right;
 }
 #footer a:link, #footer a:visited {
@@ -112,8 +132,9 @@ button::-moz-focus-inner {
     <p><span id='error-text'>Builder may not work well in your browser.</span> <a id='dismiss' href='#'>Dismiss</a></p>
   </div>
   <canvas id='canvas' width='640' height='480'></canvas>
-  <button id='toggle' class='button move'>Move</button>
-  <button id='share' class='button share'>Share</button>
+  <button id='move' class='button active'>Move</button>
+  <button id='create' class='button'>Create</button>
+  <button id='share' class='button'>Share</button>
   <div id='footer'>
     <p>About <a href='http://go/buildergame' target='_blank'>Builder</a>.</p>
   </div>

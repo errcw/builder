@@ -169,7 +169,7 @@ var builder = (function() {
 
     // Draw the border
     ctx.strokeStyle = '#333';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 1;
     ctx.strokeRect(0, 0, Builder.WIDTH, Builder.HEIGHT);
   };
 
@@ -455,7 +455,7 @@ var builder = (function() {
     {fill: '#41B148', border: '#2E7A31'},
     {fill: '#F6AA37', border: '#AF7927'},
     // Reserved for immovable and invalid bodies
-    {fill: '#FCFCFc', border: '#111111'},
+    {fill: '#FCFCFC', border: '#666666'},
   ];
   BoxView.GREY = BoxView.COLOURS.length - 1;
 
