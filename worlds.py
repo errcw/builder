@@ -24,7 +24,7 @@ class WorldDataHandler(webapp.RequestHandler):
       self.error(400)
       return
 
-    world = World.get_by_id(world_id)
+    world = World.get_by_id(int(world_id))
     if not world:
       self.error(404)
       return
@@ -42,7 +42,7 @@ class WorldThumbnailHandler(webapp.RequestHandler):
       self.error(400)
       return
 
-    world = World.get_by_id(world_id)
+    world = World.get_by_id(int(world_id))
     if not world:
       self.error(404)
       return
@@ -88,8 +88,8 @@ class WorldUploader(webapp.RequestHandler):
     }))
 
 
-application = webapp.WSGIApplication([('/worlds/data/(.*)', WorldDataHandler),
-                                      ('/worlds/thumbnails/(.*)', WorldThumbnailHandler),
+application = webapp.WSGIApplication([('/worlds/data/(\d+)', WorldDataHandler),
+                                      ('/worlds/thumbnails/(\d+)', WorldThumbnailHandler),
                                       ('/worlds/', WorldUploader)],
                                       debug=True)
 
