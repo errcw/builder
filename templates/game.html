@@ -15,6 +15,10 @@ body {
   margin-top: 10px;
 }
 
+h1 {
+  font-size: 40px;
+}
+
 #error-bar {
   display: none;
   width: 100%;
@@ -114,9 +118,9 @@ button::-moz-focus-inner {
 }
 
 #footer p {
-  font-size: 12px;
-  margin-top: -45px;
-  text-align: right;
+  margin-top: -10px;
+  font-size: 14px;
+  font-style: italic;
 }
 #footer a:link, #footer a:visited {
   color: #000;
@@ -128,6 +132,9 @@ button::-moz-focus-inner {
 </style>
 
 <div id='container'>
+  {% if not is_google %}
+  <h1>Builder</h1>
+  {% endif %}
   <div id='error-bar'>
     <p><span id='error-text'>Builder may not work well in your browser.</span> <a id='dismiss' href='#'>Dismiss</a></p>
   </div>
@@ -136,7 +143,11 @@ button::-moz-focus-inner {
   <button id='create' class='button'>Create</button>
   <button id='share' class='button'>Share</button>
   <div id='footer'>
-    <p>About <a href='http://go/buildergame' target='_blank'>Builder</a>.</p>
+    {% if not is_google %}
+    <p>A project by <a href='http://ericw.ca'>Eric Woroshow</a></p>
+    {% else %}
+    <p>About <a href='http://go/buildergame' target='_blank'>Builder</a></p>
+    {% endif %}
   </div>
 </div>
 
@@ -154,5 +165,4 @@ button::-moz-focus-inner {
   builder.baseUrl = '{{baseurl}}';
   builder.start();
 </script>
-
 {% endblock %}

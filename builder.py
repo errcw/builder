@@ -8,10 +8,11 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from wsgiref.util import application_uri
 
 
-def render_game(wrapper, request):
+def render_game(wrapper, is_google, request):
   base_url = application_uri(request.environ)
   path = os.path.join(os.path.dirname(__file__), 'templates', 'game.html')
   values = { 'wrapper': wrapper,
+             'is_google': is_google,
              'baseurl': base_url,
            }
   return template.render(path, values)
@@ -21,14 +22,14 @@ class EsGadget(webapp.RequestHandler):
   '''Renders the game as an XML gadget for ES.'''
   def get(self):
     self.response.headers['Content-Type'] = 'application/xml'
-    self.response.out.write(render_game('builder.xml', self.request))
+    self.response.out.write(render_game('builder.xml', True, self.request))
 
 
 class HtmlPage(webapp.RequestHandler):
   '''Renders the game as an HTML page for debugging.'''
   def get(self):
     self.response.headers['Content-Type'] = 'text/html'
-    self.response.out.write(render_game('builder.html', self.request))
+    self.response.out.write(render_game('builder.html', False, self.request))
 
 
 application = webapp.WSGIApplication([('/', HtmlPage),
