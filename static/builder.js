@@ -537,7 +537,8 @@ var builder = (function() {
     var canvas = document.createElement('canvas');
     var supportsCanvas = !!(canvas.getContext);
     var supportsCors = !!('withCredentials' in new XMLHttpRequest());
-    return supportsCanvas && supportsCors;
+    return supportsCanvas
+        && (supportsCors || !window.google); // Only necessary for G+
   }
 
   /**
