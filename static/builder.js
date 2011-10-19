@@ -55,13 +55,17 @@ var builder = (function() {
         },
         success: function(response) {
           console.log('Uploaded world ' + response.id);
-          google.sendPost({
-            title: 'Check out what I built!',
-            body: 'Come check out what I built!',
-            anchorText: 'Check It Out',
-            params: {worldId: response.id},
-            images: [builder.baseUrl + response.thumbnail_url]
-          });
+          if (window.google) {
+            google.sendPost({
+              title: 'Check out what I built!',
+              body: 'Come check out what I built!',
+              anchorText: 'Check It Out',
+              params: {worldId: response.id},
+              images: [builder.baseUrl + response.thumbnail_url]
+            });
+          } else {
+            showInfo_(builder.baseUrl + '#' + response.id);
+          }
         },
         error: function() {
           showError_('Uh oh, there was a problem sharing your work.');
@@ -534,7 +538,7 @@ var builder = (function() {
     var supportsCanvas = !!(canvas.getContext);
     var supportsCors = !!('withCredentials' in new XMLHttpRequest());
     return supportsCanvas && supportsCors;
-  };
+  }
 
   /**
    * Displays a dismissable error bar above the game.
@@ -543,8 +547,20 @@ var builder = (function() {
   function showError_(text) {
     $('#error-text').text(text);
     $('#error-bar').fadeIn();
-      $('#dismiss').click(function() {
+      $('#error-dismiss').click(function() {
         $('#error-bar').fadeOut();
+      });
+  }
+
+  /**
+   * Displays a dismissable information bar above the game.
+   * @param text {string} The text to show the user
+   */
+  function showInfo_(text) {
+    $('#info-text').text(text);
+    $('#info-bar').fadeIn();
+      $('#info-dismiss').click(function() {
+        $('#info-bar').fadeOut();
       });
   }
 
