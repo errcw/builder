@@ -19,6 +19,12 @@ h1 {
   font-size: 40px;
 }
 
+#loading {
+  position: absolute;
+  top: 2em;
+  left: 2em;
+}
+
 .notification {
   display: none;
   width: 100%;
@@ -147,6 +153,7 @@ button::-moz-focus-inner {
   <div id='info-bar' class='notification info'>
     <p><span id='info-text'>Builder may not work well in your browser.</span> <a id='info-dismiss' href='#'>Dismiss</a></p>
   </div>
+  <img id='loading' src='{{baseurl}}static/loading.gif'/>
   <canvas id='canvas' width='640' height='480'></canvas>
   <button id='move' class='button active'>Move</button>
   <button id='create' class='button'>Create</button>

@@ -582,12 +582,27 @@ var builder = (function() {
   }
 
   /**
+   * Adds a loading animation while waiting for ajax requests.
+   */
+  function addAjaxAnimations_() {
+    $('#loading').hide();
+    $('#loading').ajaxStart(function () {
+      $(this).fadeIn();
+    });
+    $('#loading').ajaxStop(function () {
+      $(this).fadeOut();
+    });
+  }
+
+  /**
    * Starts the game loop.
    */
   function start_() {
     if (!isSupported_()) {
       showError_('Builder may not work well in your browser.');
     }
+
+    addAjaxAnimations_();
 
     var worldId = getWorldIdToLoad_();
     if (worldId) {
