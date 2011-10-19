@@ -12,13 +12,8 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 class World(db.Model):
   '''A world.'''
-  id = db.StringProperty(required=True)
   world = db.TextProperty(required=True)
   thumbnail = db.BlobProperty()
-
-  @classmethod
-  def key_for(cls, id):
-    return db.Key.from_path(cls.__name__, id)
 
 
 class WorldDataHandler(webapp.RequestHandler):
@@ -29,7 +24,7 @@ class WorldDataHandler(webapp.RequestHandler):
       self.error(400)
       return
 
-    world = db.get(World.key_for(world_id))
+    world = World.get_by_id(world_id)
     if not world:
       self.error(404)
       return
@@ -47,7 +42,7 @@ class WorldThumbnailHandler(webapp.RequestHandler):
       self.error(400)
       return
 
-    world = db.get(World.key_for(world_id))
+    world = World.get_by_id(world_id)
     if not world:
       self.error(404)
       return
@@ -78,14 +73,12 @@ class WorldUploader(webapp.RequestHandler):
       return
     thumbnail = base64.b64decode(thumbnail_base64)
 
-    id = str(uuid.uuid4())
-
     world = World(
-        key_name = id,
-        id = id,
         world = world_data_json,
         thumbnail = db.Blob(thumbnail))
     world.put()
+
+    id = str(world.key().id())
 
     self.response.headers['Access-Control-Allow-Origin'] = '*'
     self.response.headers['Content-Type'] = 'application/json'
