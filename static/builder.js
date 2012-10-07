@@ -64,7 +64,8 @@ var builder = (function() {
               images: [builder.baseUrl + response.thumbnail_url]
             });
           } else {
-            showInfo_(builder.baseUrl + '#' + response.id);
+            var url = builder.baseUrl + '#' + response.id;
+            showInfo_('<a href="' + url + '">' + url + '</a>');
           }
         },
         error: function() {
@@ -558,7 +559,7 @@ var builder = (function() {
    * @param text {string} The text to show the user
    */
   function showInfo_(text) {
-    $('#info-text').text(text);
+    $('#info-text').html(text);
     $('#info-bar').fadeIn();
       $('#info-dismiss').click(function() {
         $('#info-bar').fadeOut();
