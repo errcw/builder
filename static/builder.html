@@ -1,5 +1,8 @@
-{% extends wrapper %}
-{% block contents %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Builder</title>
+
 <style type='text/css'>
 body {
   background-color: #f8f8f8;
@@ -146,42 +149,42 @@ button::-moz-focus-inner {
 }
 </style>
 
-<div id='container'>
-  {% if not is_google %}
-  <h1>Builder</h1>
-  {% endif %}
-  <div id='error-bar' class='notification error'>
-    <p><span id='error-text'>Builder may not work well in your browser.</span> <a id='error-dismiss' href='#'>Dismiss</a></p>
-  </div>
-  <div id='info-bar' class='notification info'>
-    <p><span id='info-text'>Builder may not work well in your browser.</span> <a id='info-dismiss' href='#'>Dismiss</a></p>
-  </div>
-  <img id='loading' src='{{baseurl}}static/loading.gif'/>
-  <canvas id='canvas' width='640' height='480'></canvas>
-  <button id='move' class='button active'>Move</button>
-  <button id='create' class='button'>Create</button>
-  <button id='share' class='button'>Share</button>
-  <div id='footer'>
-    {% if not is_google %}
-    <p>A project by <a href='http://ericw.ca'>Eric Woroshow</a></p>
-    {% else %}
-    <p>About <a href='http://go/buildergame' target='_blank'>Builder</a></p>
-    {% endif %}
-  </div>
-</div>
+  </head>
+  <body>
+    <div id='container'>
+      <h1>Builder</h1>
+      <div id='error-bar' class='notification error'>
+        <p><span id='error-text'>Builder may not work well in your browser.</span> <a id='error-dismiss' href='#'>Dismiss</a></p>
+      </div>
+      <div id='info-bar' class='notification info'>
+        <p><span id='info-text'>Builder may not work well in your browser.</span> <a id='info-dismiss' href='#'>Dismiss</a></p>
+      </div>
 
-<script>
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-25858332-1']);
-  _gaq.push(['_trackPageview']);
-</script>
-<script src='http://www.google-analytics.com/ga.js'></script>
-<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js'></script>
+      <img id='loading' src='{{baseurl}}static/loading.gif'/>
+      <canvas id='canvas' width='640' height='480'></canvas>
+      <button id='move' class='button active'>Move</button>
+      <button id='create' class='button'>Create</button>
+      <button id='share' class='button'>Share</button>
+      <div id='footer'>
+        <p>A project by <a href='http://ericw.ca'>Eric Woroshow</a></p>
+      </div>
+    </div>
 
-<script src='{{baseurl}}static/physics.js'></script>
-<script src='{{baseurl}}static/builder.js'></script>
-<script>
-  builder.baseUrl = '{{baseurl}}';
-  builder.start();
-</script>
-{% endblock %}
+    <script>
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-25858332-1']);
+      _gaq.push(['_trackPageview']);
+    </script>
+    <script src='http://www.google-analytics.com/ga.js'></script>
+    <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js'></script>
+
+    <script src='static/physics.js'></script>
+    <script src='static/builder.js'></script>
+    <script>
+      builder.baseUrl = '/';
+      builder.start();
+      $(function() { builder.ready = true; })
+    </script>
+  </body>
+</html>
+

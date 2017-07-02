@@ -6,9 +6,8 @@ import re
 import simplejson as json
 import uuid
 
+import webapp2
 from google.appengine.ext import db
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp.util import run_wsgi_app
 
 class World(db.Model):
   '''A world.'''
@@ -16,7 +15,7 @@ class World(db.Model):
   thumbnail = db.BlobProperty()
 
 
-class WorldDataHandler(webapp.RequestHandler):
+class WorldDataHandler(webapp2.RequestHandler):
   '''Controller for reading world data.'''
 
   def get(self, world_id):
@@ -34,7 +33,7 @@ class WorldDataHandler(webapp.RequestHandler):
     self.response.out.write(world.world)
 
 
-class WorldThumbnailHandler(webapp.RequestHandler):
+class WorldThumbnailHandler(webapp2.RequestHandler):
   '''Controller for reading world thumbnails.'''
 
   def get(self, world_id):
@@ -52,7 +51,7 @@ class WorldThumbnailHandler(webapp.RequestHandler):
     self.response.out.write(world.thumbnail)
 
 
-class WorldUploader(webapp.RequestHandler):
+class WorldUploader(webapp2.RequestHandler):
   '''Controller for uploading new worlds.'''
 
   data_url_pattern = re.compile('data:image/png;base64,(.*)$')
@@ -88,10 +87,7 @@ class WorldUploader(webapp.RequestHandler):
     }))
 
 
-application = webapp.WSGIApplication([('/worlds/data/(\d+)', WorldDataHandler),
-                                      ('/worlds/thumbnails/(\d+)', WorldThumbnailHandler),
-                                      ('/worlds/', WorldUploader)],
-                                      debug=True)
-
-if __name__ == '__main__':
-    run_wsgi_app(application)
+app = webapp2.WSGIApplication([('/worlds/data/(\d+)', WorldDataHandler),
+                               ('/worlds/thumbnails/(\d+)', WorldThumbnailHandler),
+                               ('/worlds/', WorldUploader)],
+                               debug=True)
