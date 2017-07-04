@@ -35,7 +35,7 @@ class WorldDataHandler(webapp2.RequestHandler):
 
     template = JINJA_ENVIRONMENT.get_template('builder.html')
     template_values = {
-        'baseurl': application_uri(self.request.environ),
+        'base_url': application_uri(self.request.environ),
         'world_id': world_id,
         'world_json': world_json,
     }
