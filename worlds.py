@@ -7,7 +7,7 @@ import re
 
 import webapp2
 import jinja2
-from google.appengine.ext import db
+from google.appengine.ext import ndb
 from wsgiref.util import application_uri
 
 
@@ -17,10 +17,10 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     autoescape=True)
 
 
-class World(db.Model):
+class World(ndb.Model):
   '''A world.'''
-  world = db.TextProperty(required=True)
-  thumbnail = db.BlobProperty()
+  world = ndb.TextProperty(required=True)
+  thumbnail = ndb.BlobProperty()
 
 
 class WorldDataHandler(webapp2.RequestHandler):
@@ -35,7 +35,7 @@ class WorldDataHandler(webapp2.RequestHandler):
 
     template = JINJA_ENVIRONMENT.get_template('builder.html')
     template_values = {
-        'base_url': application_uri(self.request.environ),
+        'baseurl': application_uri(self.request.environ),
         'world_id': world_id,
         'world_json': world_json,
     }
@@ -56,7 +56,6 @@ class WorldThumbnailHandler(webapp2.RequestHandler):
       self.error(404)
       return
 
-    self.response.headers['Access-Control-Allow-Origin'] = '*'
     self.response.headers['Content-Type'] = 'image/png'
     self.response.out.write(world.thumbnail)
 
@@ -84,12 +83,11 @@ class WorldUploader(webapp2.RequestHandler):
 
     world = World(
         world = world_data_json,
-        thumbnail = db.Blob(thumbnail))
+        thumbnail = thumbnail)
     world.put()
 
-    id = str(world.key().id())
+    id = str(world.key.id())
 
-    self.response.headers['Access-Control-Allow-Origin'] = '*'
     self.response.headers['Content-Type'] = 'application/json'
     self.response.out.write(json.dumps({
       'id': id,
