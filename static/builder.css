@@ -24,17 +24,16 @@ h1 {
 
 .notification {
   display: none;
-  width: 100%;
+  width: 628px;
   margin-bottom: 5px;
   text-align: center;
+  vertical-align: top;
   color: #fff;
   border-radius: 5px;
-}
-.notification p {
-  margin: 3px;
-  padding: 3px;
+  padding: 6px;
 }
 .notification a:link, .notification a:visited {
+  vertical-align: baseline;
   color: #fff;
 }
 .notification.error {
@@ -45,9 +44,9 @@ h1 {
   background: #41b148;
   box-shadow: 2px 2px #2f7f33;
 }
-#error-dismiss, #info-dismiss {
+#error-dismiss, #info-dismiss, #share-dismiss {
   font-weight: bold;
-  margin-left: 1em;
+  margin-left: 2em;
 }
 
 .button {

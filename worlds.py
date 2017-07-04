@@ -4,10 +4,18 @@ import base64
 import json
 import os
 import re
-import uuid
 
 import webapp2
+import jinja2
 from google.appengine.ext import db
+from wsgiref.util import application_uri
+
+
+JINJA_ENVIRONMENT = jinja2.Environment(
+    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
+    extensions=['jinja2.ext.autoescape'],
+    autoescape=True)
+
 
 class World(db.Model):
   '''A world.'''
@@ -18,19 +26,21 @@ class World(db.Model):
 class WorldDataHandler(webapp2.RequestHandler):
   '''Controller for reading world data.'''
 
-  def get(self, world_id):
-    if not world_id:
-      self.error(400)
-      return
+  def get(self, world_id=None):
+    world_json = None
+    if world_id:
+        world = World.get_by_id(int(world_id))
+        if world:
+            world_json = world.world
 
-    world = World.get_by_id(int(world_id))
-    if not world:
-      self.error(404)
-      return
+    template = JINJA_ENVIRONMENT.get_template('builder.html')
+    template_values = {
+        'base_url': application_uri(self.request.environ),
+        'world_id': world_id,
+        'world_json': world_json,
+    }
 
-    self.response.headers['Access-Control-Allow-Origin'] = '*'
-    self.response.headers['Content-Type'] = 'application/json'
-    self.response.out.write(world.world)
+    self.response.out.write(template.render(template_values))
 
 
 class WorldThumbnailHandler(webapp2.RequestHandler):
@@ -87,7 +97,8 @@ class WorldUploader(webapp2.RequestHandler):
     }))
 
 
-app = webapp2.WSGIApplication([('/worlds/data/(\d+)', WorldDataHandler),
+app = webapp2.WSGIApplication([('/', WorldDataHandler),
+                               ('/worlds/(\d+)', WorldDataHandler),
                                ('/worlds/thumbnails/(\d+)', WorldThumbnailHandler),
                                ('/worlds/', WorldUploader)],
                                debug=True)

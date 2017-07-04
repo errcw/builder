@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Builder</title>
+
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-25858332-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+
+    <script
+      src='https://code.jquery.com/jquery-3.2.1.min.js'
+      integrity='sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4='
+      crossorigin='anonymous'>
+    </script>
+
+    <script src='/static/physics.js'></script>
+    <script src='/static/builder.js'></script>
+    <script>$(() => {
+      builder.baseUrl = '{{ base_url }}';
+      {% if world_json %}
+      builder.initialWorldJson = '{{ world_json|safe }}';
+      {% endif %}
+      builder.start();
+    })
+    </script>
+
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Montserrat'/>
+    <link rel='stylesheet' href='/static/builder.css' type='text/css'/>
+
+    <meta property='og:type' content='website' />
+    <meta property='og:title' content='Builder' />
+    <meta property='og:description' content='A web game about building things with toy blocks' />
+    {% if world_id %}
+      <meta property='og:url' content='{{base_url}}worlds/{{world_id}}' />
+      <meta property='og:image' content='{{base_url}}worlds/thumbnails/{{world_id}}' />
+      <meta property='og:image:width' content='640' />
+      <meta property='og:image:height' content='480' />
+    {% endif %}
+  </head>
+  <body>
+    <div id='fb-root'></div>
+    <script>(function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = '//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.9&appId=331841127545';
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));</script>
+
+    <div id='container'>
+      <h1>Builder</h1>
+
+      <div id='error-bar' class='notification error'>
+        <span id='error-text'>Builder may not work well in your browser.</span> <a id='error-dismiss' href='#'>Dismiss</a>
+      </div>
+      <div id='share-bar' class='notification info'>
+        <a id='link-share' href='{{base_url}}'>Link to share</a>
+        <div
+          id='fb-share'
+          class='fb-share-button'
+          data-layout='button'
+          data-size='small'
+          data-mobile-iframe='true'>
+            <a class='fb-xfbml-parse-ignore' target='_blank' href='https://www.facebook.com/sharer/sharer.php'>Share</a>
+        </div>
+        <a id='share-dismiss' href='#'>Dismiss</a>
+      </div>
+
+
+      <img id='loading' src='/static/loading.gif'/>
+      <canvas id='canvas' width='640' height='480'></canvas>
+      <button id='move' class='button active'>Move</button>
+      <button id='create' class='button'>Create</button>
+      <button id='share' class='button'>Share</button>
+
+      <div id='footer'>
+        <p>A project by <a href='http://ericw.ca'>Eric Woroshow</a></p>
+      </div>
+    </div>
+  </body>
+</html>
+

@@ -45,6 +45,7 @@ const builder = (function() {
     });
 
     const share = $('#share');
+    const shareBar = $('#share-bar');
     share.click(function() {
       $.ajax({
         type: 'POST',
@@ -55,13 +56,22 @@ const builder = (function() {
         },
         success: function(response) {
           console.log('Uploaded world ' + response.id);
-          const url = builder.baseUrl + '#' + response.id;
-          showInfo_('<a href="' + url + '">Link to share</a>');
+          const url = builder.baseUrl + 'worlds/' + response.id;
+
+          $('#link-share').attr('href', url);
+          $('#link-share').text('World ' + response.id);
+          $('#fb-share').attr('data-href', url);
+          FB.XFBML.parse();
+
+          shareBar.fadeIn();
         },
         error: function() {
           showError_('Uh oh, there was a problem sharing your work.');
         }
       });
+    });
+    $('#share-dismiss').click(function() {
+      shareBar.fadeOut();
     });
 
     // Add the canvas handlers
@@ -374,7 +384,7 @@ const builder = (function() {
   Builder.prototype.getWorldThumbnail = function() {
     const canvas = this.canvas[0];
 
-    const scale = 6;
+    const scale = 1;
     const scaledWidth = Math.round(canvas.width / scale);
     const scaledHeight = Math.round(canvas.height / scale);
 
@@ -527,9 +537,7 @@ const builder = (function() {
   function isSupported_() {
     const canvas = document.createElement('canvas');
     const supportsCanvas = !!(canvas.getContext);
-    const supportsCors = !!('withCredentials' in new XMLHttpRequest());
-    return supportsCanvas
-        && (supportsCors || !window.google); // Only necessary for G+
+    return supportsCanvas;
   }
 
   /**
@@ -545,26 +553,9 @@ const builder = (function() {
   }
 
   /**
-   * Displays a dismissable information bar above the game.
-   * @param text {string} The text to show the user
+   * Displays a dismissable share bar above the game.
    */
-  function showInfo_(text) {
-    $('#info-text').html(text);
-    $('#info-bar').fadeIn();
-      $('#info-dismiss').click(function() {
-        $('#info-bar').fadeOut();
-      });
-  }
-
-  /**
-   * @return {string} Id of the world to load, taken from the page
-   */
-  function getWorldIdToLoad_() {
-    const worldHash = window.location.hash;
-    if (worldHash) {
-      return worldHash.substring(1);
-    }
-    return null;
+  function showShare_() {
   }
 
   /**
@@ -590,21 +581,16 @@ const builder = (function() {
 
     addAjaxAnimations_();
 
-    const worldId = getWorldIdToLoad_();
-    if (worldId) {
-      $.ajax({
-        url: builder.baseUrl + 'worlds/data/' + worldId,
-        success: function(world) {
-          new Builder(world).start();
-        },
-        error: function() {
-          showError_('Uh oh, there was a problem loading the world.');
-          new Builder().start();
-        }
-      });
-    } else {
-      new Builder().start();
+    let initialWorldData = null;
+    if (builder.initialWorldJson) {
+      try {
+        initialWorldData = JSON.parse(builder.initialWorldJson);
+      } catch (e) {
+        showError_('Failed to load world');
+        // Fall through to starting a new world.
+      }
     }
+    new Builder(initialWorldData).start();
   }
 
   return { start: start_ }
