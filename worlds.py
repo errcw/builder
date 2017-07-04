@@ -1,9 +1,9 @@
 '''Models worlds.'''
 
 import base64
+import json
 import os
 import re
-import simplejson as json
 import uuid
 
 import webapp2

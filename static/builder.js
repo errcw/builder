@@ -55,18 +55,8 @@ var builder = (function() {
         },
         success: function(response) {
           console.log('Uploaded world ' + response.id);
-          if (window.google) {
-            google.sendPost({
-              title: 'Check out what I built!',
-              body: 'Come check out what I built!',
-              anchorText: 'Check It Out',
-              params: {worldId: response.id},
-              images: [builder.baseUrl + response.thumbnail_url]
-            });
-          } else {
-            var url = builder.baseUrl + '#' + response.id;
-            showInfo_('<a href="' + url + '">' + url + '</a>');
-          }
+          var url = builder.baseUrl + '#' + response.id;
+          showInfo_('<a href="' + url + '">Link to share</a>');
         },
         error: function() {
           showError_('Uh oh, there was a problem sharing your work.');
@@ -570,14 +560,9 @@ var builder = (function() {
    * @return {string} Id of the world to load, taken from the page
    */
   function getWorldIdToLoad_() {
-    if (window.gadgets) {
-      var params = gadgets.views.getParams();
-      return params['worldId'];
-    } else {
-      var worldHash = window.location.hash;
-      if (worldHash) {
-        return worldHash.substring(1);
-      }
+    var worldHash = window.location.hash;
+    if (worldHash) {
+      return worldHash.substring(1);
     }
     return null;
   }

@@ -1,0 +1,134 @@
+body {
+  background-color: #f8f8f8;
+  font-family: 'Montserrat', sans-serif;
+}
+#container {
+  width: 640px;
+  height: 500px;
+  margin: 0 auto;
+}
+#canvas {
+  background: #ccc;
+  margin-top: 10px;
+}
+
+h1 {
+  font-size: 40px;
+}
+
+#loading {
+  position: absolute;
+  top: 2em;
+  left: 2em;
+}
+
+.notification {
+  display: none;
+  width: 100%;
+  margin-bottom: 5px;
+  text-align: center;
+  color: #fff;
+  border-radius: 5px;
+}
+.notification p {
+  margin: 3px;
+  padding: 3px;
+}
+.notification a:link, .notification a:visited {
+  color: #fff;
+}
+.notification.error {
+  background: #da4936;
+  box-shadow: 2px 2px #993126;
+}
+.notification.info {
+  background: #41b148;
+  box-shadow: 2px 2px #2f7f33;
+}
+#error-dismiss, #info-dismiss {
+  font-weight: bold;
+  margin-left: 1em;
+}
+
+.button {
+  display: inline-block;
+  color: #333;
+  background-color: #eee;
+  border: 1px solid #777;
+  padding: 0 1.5em;
+  margin: 0.5em;
+  font: bold 1em/2em 'Montserrat', sans-serif;
+  text-decoration: none;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 8);
+  border-radius: 0.2em;
+  cursor: pointer;
+  overflow: visible;
+}
+.button:hover {
+  background-color: #f9f9f9;
+}
+.button:active {
+  background-color: #ddd;
+}
+.button:visited {
+  color: #333;
+}
+.button:before {
+  background: #ccc;
+  background: rgba(0, 0, 0, 0.1);
+  float: left;
+  width: 1.2em;
+  text-align: center;
+  font-size: 1.5em;
+  margin: 0 1em 0 -1em;
+  padding: 0 0.2em;
+  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.5), 2px 0 0 rgba(255, 255, 255, 0.5);
+  border-radius: 0.15em 0 0 0.15em;
+  pointer-events: none;
+}
+.button.active:before {
+  background: #333;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 8);
+}
+button::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+#move {
+  position: relative;
+  top: -54px;
+}
+#move:before {
+  content: "\219D";
+}
+#create {
+  position: relative;
+  top: -54px;
+  left: -10px;
+}
+#create:before {
+  content: "\2737";
+}
+#share {
+  position: relative;
+  left: 180px;
+  top: -54px;
+}
+#share:before {
+  content: "\2605";
+}
+
+#footer p {
+  margin-top: -10px;
+  font-size: 14px;
+  font-style: italic;
+}
+#footer a:link, #footer a:visited {
+  color: #000;
+  text-decoration: underline;
+}
+#footer a:hover {
+  background: #ddd;
+}

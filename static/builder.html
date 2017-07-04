@@ -3,156 +3,32 @@
   <head>
     <title>Builder</title>
 
-<style type='text/css'>
-body {
-  background-color: #f8f8f8;
-}
-#container {
-  width: 640px;
-  height: 500px;
-  margin: 0 auto;
-  font-family: Arial, serif;
-}
-#canvas {
-  background: #ccc;
-  margin-top: 10px;
-}
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-25858332-1', 'auto');
+      ga('send', 'pageview');
+    </script>
 
-h1 {
-  font-size: 40px;
-}
+    <script
+      src="https://code.jquery.com/jquery-3.2.1.min.js"
+      integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+      crossorigin="anonymous">
+    </script>
 
-#loading {
-  position: absolute;
-  top: 2em;
-  left: 2em;
-}
+    <script src='static/physics.js'></script>
+    <script src='static/builder.js'></script>
+    <script>$(() => {builder.baseUrl = '/'; builder.start();})</script>
 
-.notification {
-  display: none;
-  width: 100%;
-  margin-bottom: 5px;
-  text-align: center;
-  color: #fff;
-  border-radius: 5px;
-}
-.notification p {
-  margin: 3px;
-  padding: 3px;
-}
-.notification a:link, .notification a:visited {
-  color: #fff;
-}
-.notification.error {
-  background: #da4936;
-  box-shadow: 2px 2px #993126;
-}
-.notification.info {
-  background: #41b148;
-  box-shadow: 2px 2px #2f7f33;
-}
-#error-dismiss, #info-dismiss {
-  font-weight: bold;
-  margin-left: 1em;
-}
-
-.button {
-  display: inline-block;
-  color: #333;
-  background-color: #eee;
-  border: 1px solid #777;
-  padding: 0 1.5em;
-  margin: 0.5em;
-  font: bold 1em/2em arial, serif;
-  text-decoration: none;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 8);
-  border-radius: 0.2em;
-  cursor: pointer;
-  overflow: visible;
-}
-.button:hover {
-  background-color: #f9f9f9;
-}
-.button:active {
-  background-color: #ddd;
-}
-.button:visited {
-  color: #333;
-}
-.button:before {
-  background: #ccc;
-  background: rgba(0, 0, 0, 0.1);
-  float: left;
-  width: 1.2em;
-  text-align: center;
-  font-size: 1.5em;
-  margin: 0 1em 0 -1em;
-  padding: 0 0.2em;
-  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.5), 2px 0 0 rgba(255, 255, 255, 0.5);
-  border-radius: 0.15em 0 0 0.15em;
-  pointer-events: none;
-}
-.button.active:before {
-  background: #333;
-  color: #fff;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 8);
-}
-.move:before {
-  content: "\219D";
-}
-.create:before {
-  content: "\2737";
-}
-.share:before {
-  content: "\2605";
-}
-button::-moz-focus-inner {
-  border: 0;
-  padding: 0;
-}
-
-#move {
-  position: relative;
-  top: -54px;
-}
-#move:before {
-  content: "\219D";
-}
-#create {
-  position: relative;
-  top: -54px;
-  left: -10px;
-}
-#create:before {
-  content: "\2737";
-}
-#share {
-  position: relative;
-  left: 185px;
-  top: -54px;
-}
-#share:before {
-  content: "\2605";
-}
-
-#footer p {
-  margin-top: -10px;
-  font-size: 14px;
-  font-style: italic;
-}
-#footer a:link, #footer a:visited {
-  color: #000;
-  text-decoration: underline;
-}
-#footer a:hover {
-  background: #ddd;
-}
-</style>
-
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Montserrat'/>
+    <link rel='stylesheet' href='static/builder.css' type='text/css'/>
   </head>
   <body>
     <div id='container'>
       <h1>Builder</h1>
+
       <div id='error-bar' class='notification error'>
         <p><span id='error-text'>Builder may not work well in your browser.</span> <a id='error-dismiss' href='#'>Dismiss</a></p>
       </div>
@@ -160,31 +36,16 @@ button::-moz-focus-inner {
         <p><span id='info-text'>Builder may not work well in your browser.</span> <a id='info-dismiss' href='#'>Dismiss</a></p>
       </div>
 
-      <img id='loading' src='{{baseurl}}static/loading.gif'/>
+      <img id='loading' src='static/loading.gif'/>
       <canvas id='canvas' width='640' height='480'></canvas>
       <button id='move' class='button active'>Move</button>
       <button id='create' class='button'>Create</button>
       <button id='share' class='button'>Share</button>
+
       <div id='footer'>
         <p>A project by <a href='http://ericw.ca'>Eric Woroshow</a></p>
       </div>
     </div>
-
-    <script>
-      var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', 'UA-25858332-1']);
-      _gaq.push(['_trackPageview']);
-    </script>
-    <script src='http://www.google-analytics.com/ga.js'></script>
-    <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js'></script>
-
-    <script src='static/physics.js'></script>
-    <script src='static/builder.js'></script>
-    <script>
-      builder.baseUrl = '/';
-      builder.start();
-      $(function() { builder.ready = true; })
-    </script>
   </body>
 </html>
 
