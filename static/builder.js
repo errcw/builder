@@ -1,7 +1,7 @@
 /**
  * @fileoverview Builder game.
  */
-var builder = (function() {
+const builder = (function() {
 
   /**
    * Builder game.
@@ -9,7 +9,7 @@ var builder = (function() {
    * @constructor
    */
   function Builder(initialWorldData) {
-    var game = this;
+    const game = this;
 
     // Build the world
     if (initialWorldData) {
@@ -19,7 +19,7 @@ var builder = (function() {
     }
 
     this.views = [];
-    for (var i = 0; i < this.world.bodies.length; i++) {
+    for (let i = 0; i < this.world.bodies.length; i++) {
       this.views.push(createView(this.world.bodies[i]));
     }
 
@@ -31,8 +31,8 @@ var builder = (function() {
     this.selection = null;
 
     // Add the button handlers
-    var move = $('#move');
-    var create = $('#create');
+    const move = $('#move');
+    const create = $('#create');
     move.click(function() {
       game.mode = Builder.Mode.SELECT;
       move.addClass('active');
@@ -44,7 +44,7 @@ var builder = (function() {
       move.removeClass('active');
     });
 
-    var share = $('#share');
+    const share = $('#share');
     share.click(function() {
       $.ajax({
         type: 'POST',
@@ -55,7 +55,7 @@ var builder = (function() {
         },
         success: function(response) {
           console.log('Uploaded world ' + response.id);
-          var url = builder.baseUrl + '#' + response.id;
+          const url = builder.baseUrl + '#' + response.id;
           showInfo_('<a href="' + url + '">Link to share</a>');
         },
         error: function() {
@@ -89,11 +89,11 @@ var builder = (function() {
    * Starts the game loop running at 60 FPS.
    */
   Builder.prototype.start = function() {
-    var frameTimeInMillis = 1000 / 60;
-    var frameTimeInSeconds = frameTimeInMillis / 1000;
+    const frameTimeInMillis = 1000 / 60;
+    const frameTimeInSeconds = frameTimeInMillis / 1000;
 
-    var game = this;
-    var context = this.canvas[0].getContext('2d');
+    const game = this;
+    const context = this.canvas[0].getContext('2d');
 
     setInterval(function() {
       game.update(frameTimeInSeconds);
@@ -108,13 +108,13 @@ var builder = (function() {
   Builder.prototype.update = function(dt) {
     // Add a force to pull the selected piece to the pointer
     if (this.selection) {
-      var toPointer = physics.Vec2.sub(
+      const toPointer = physics.Vec2.sub(
           this.selection.position,
           this.selection.body.position);
       if (toPointer.x != 0 || toPointer.y != 0) {
-        var directionToPointer = physics.Vec2.normalize(toPointer);
-        var distanceToPointer = physics.Vec2.len(toPointer);
-        var force = physics.Vec2.scale(
+        const directionToPointer = physics.Vec2.normalize(toPointer);
+        const distanceToPointer = physics.Vec2.len(toPointer);
+        const force = physics.Vec2.scale(
             directionToPointer,
             distanceToPointer * this.selection.body.density * 500);
         this.selection.body.force = force;
@@ -132,14 +132,14 @@ var builder = (function() {
     // Remove objects outside the frame
     this.cleanTicks -= 1;
     if (this.cleanTicks <= 0) {
-      var bodiesToRemove = [];
-      for (var i = 0; i < this.world.bodies.length; i++) {
-        var body = this.world.bodies[i];
+      let bodiesToRemove = [];
+      for (let i = 0; i < this.world.bodies.length; i++) {
+        const body = this.world.bodies[i];
         if (body.position.y > Builder.HEIGHT * 2) {
           bodiesToRemove.push(body);
         }
       }
-      for (var i = 0; i < bodiesToRemove.length; i++) {
+      for (let i = 0; i < bodiesToRemove.length; i++) {
         this.world.removeBody(bodiesToRemove[i]);
       }
       this.cleanTicks = Builder.WORLD_CLEAN_TICK_INTERVAL;
@@ -156,7 +156,7 @@ var builder = (function() {
     ctx.fillRect(0, 0, Builder.WIDTH, Builder.HEIGHT);
 
     // Draw the bodies
-    for (var i = 0; i < this.views.length; i++) {
+    for (let i = 0; i < this.views.length; i++) {
       this.views[i].draw(ctx);
     }
 
@@ -175,21 +175,21 @@ var builder = (function() {
    * @param e Mouse event data
    */
   Builder.prototype.onMouseDown = function(e) {
-    var mx = e.pageX - this.canvas.offset().left;
-    var my = e.pageY - this.canvas.offset().top;
+    const mx = e.pageX - this.canvas.offset().left;
+    const my = e.pageY - this.canvas.offset().top;
     switch (this.mode) {
       case Builder.Mode.SELECT:
         // Check for selection of an existing body
         this.pointer.position = physics.Vec2.of(mx, my);
 
-        var selected = this.getCollidingBody(this.pointer);
+        const selected = this.getCollidingBody(this.pointer);
 
         // Disallow selection of immovable objects (e.g., the ground)
         if (!selected || selected.mass == Number.MAX_VALUE) {
           break;
         }
 
-        var selectedView = this.highlightView(selected);
+        const selectedView = this.highlightView(selected);
         selectedView.selected = true;
 
         this.selection = {
@@ -217,8 +217,8 @@ var builder = (function() {
    * @param e Mouse event data
    */
   Builder.prototype.onMouseMove = function(e) {
-    var mx = e.pageX - this.canvas.offset().left;
-    var my = e.pageY - this.canvas.offset().top;
+    const mx = e.pageX - this.canvas.offset().left;
+    const my = e.pageY - this.canvas.offset().top;
     switch (this.mode) {
       case Builder.Mode.SELECT:
         if (!this.selection) {
@@ -234,8 +234,8 @@ var builder = (function() {
           return;
         }
         // Update the size/position of the box
-        var dx = mx - this.newBodyStart.x;
-        var dy = my - this.newBodyStart.y;
+        const dx = mx - this.newBodyStart.x;
+        const dy = my - this.newBodyStart.y;
         this.newBody.shape.setSize(Math.abs(dx), Math.abs(dy));
         this.newBody.position.x = this.newBodyStart.x + dx * 0.5;
         this.newBody.position.y = this.newBodyStart.y + dy * 0.5;
@@ -258,13 +258,13 @@ var builder = (function() {
 
         // Apply a final force
         if (!didLeave) {
-          var toPointer = physics.Vec2.sub(
+          const toPointer = physics.Vec2.sub(
               this.selection.position,
               this.selection.body.position);
           if (toPointer.x != 0 || toPointer.y != 0) {
-            var directionToPointer = physics.Vec2.normalize(toPointer);
-            var distanceToPointer = physics.Vec2.len(toPointer);
-            var force = physics.Vec2.scale(
+            const directionToPointer = physics.Vec2.normalize(toPointer);
+            const distanceToPointer = physics.Vec2.len(toPointer);
+            const force = physics.Vec2.scale(
                 directionToPointer,
                 distanceToPointer * this.selection.body.density * 200);
             this.selection.body.force = force;
@@ -283,12 +283,12 @@ var builder = (function() {
 
         // Add the new box if it is viable
         if (!didLeave && this.canCreate(this.newBody)) {
-          var body = new physics.Body(this.newBody.shape, 20000);
+          const body = new physics.Body(this.newBody.shape, 20000);
           body.position = this.newBody.position;
           body.rotation = this.newBody.rotation;
           this.world.addBody(body);
 
-          var view = createView(body);
+          const view = createView(body);
           view.colour = this.newBodyView.colour;
           this.views.push(view);
         }
@@ -302,22 +302,22 @@ var builder = (function() {
    * Creates and returns a world with some interesting initial state.
    */
   Builder.prototype.createWorld = function() {
-    var world = new physics.World();
+    const world = new physics.World();
 
-    var ground = new physics.Body(new physics.Box(Builder.WIDTH + 100, 50), Number.MAX_VALUE);
+    const ground = new physics.Body(new physics.Box(Builder.WIDTH + 100, 50), Number.MAX_VALUE);
     ground.position = physics.Vec2.of(Builder.WIDTH / 2, Builder.HEIGHT - 25);
     ground.rotation = 0;
     world.addBody(ground);
 
-    var PYRAMID_HEIGHT = 5;
-    var PYRAMID_SPACING = 35;
+    const PYRAMID_HEIGHT = 5;
+    const PYRAMID_SPACING = 35;
 
-    var yBase = ground.position.y - ground.shape.size.y - 5;
-    for (var row = 0; row < PYRAMID_HEIGHT; row++) {
-      var cols = PYRAMID_HEIGHT - row;
-      var xBase = (Builder.WIDTH / 2) - (cols / 2) * PYRAMID_SPACING;
-      for (var col = 0; col < cols; col++) {
-        var box = new physics.Body(new physics.Box(30, 30), 20000);
+    const yBase = ground.position.y - ground.shape.size.y - 5;
+    for (let row = 0; row < PYRAMID_HEIGHT; row++) {
+      const cols = PYRAMID_HEIGHT - row;
+      const xBase = (Builder.WIDTH / 2) - (cols / 2) * PYRAMID_SPACING;
+      for (let col = 0; col < cols; col++) {
+        const box = new physics.Body(new physics.Box(30, 30), 20000);
         box.position = physics.Vec2.of(xBase + col * PYRAMID_SPACING, yBase - row * PYRAMID_SPACING);
         box.rotation = 0;
         world.addBody(box);
@@ -331,9 +331,9 @@ var builder = (function() {
    * @return A JSON-stringified version of the current world state.
    */
   Builder.prototype.getSerializedWorld = function() {
-    var bodies = [];
-    for (var i = 0; i < this.world.bodies.length; i++) {
-      var body = this.world.bodies[i];
+    const bodies = [];
+    for (let i = 0; i < this.world.bodies.length; i++) {
+      const body = this.world.bodies[i];
       bodies.push({
         x: body.position.x,
         y: body.position.y,
@@ -355,11 +355,11 @@ var builder = (function() {
    * @return {World} A world parsed from its JSON representation
    */
   Builder.prototype.getDeserializedWorld = function(worldData) {
-    var world = new physics.World();
+    const world = new physics.World();
 
-    for (var i = 0; i < worldData.bodies.length; i++) {
-      var bodyData = worldData.bodies[i];
-      var box = new physics.Body(new physics.Box(bodyData.w, bodyData.h), bodyData.m);
+    for (let i = 0; i < worldData.bodies.length; i++) {
+      const bodyData = worldData.bodies[i];
+      const box = new physics.Body(new physics.Box(bodyData.w, bodyData.h), bodyData.m);
       box.position = physics.Vec2.of(bodyData.x, bodyData.y);
       box.rotation = bodyData.r;
       world.addBody(box);
@@ -372,17 +372,17 @@ var builder = (function() {
    * @return A data url encoding a thumbnail of the current world state.
    */
   Builder.prototype.getWorldThumbnail = function() {
-    var canvas = this.canvas[0];
+    const canvas = this.canvas[0];
 
-    var scale = 6;
-    var scaledWidth = Math.round(canvas.width / scale);
-    var scaledHeight = Math.round(canvas.height / scale);
+    const scale = 6;
+    const scaledWidth = Math.round(canvas.width / scale);
+    const scaledHeight = Math.round(canvas.height / scale);
 
-    var scaledCanvas = document.createElement('canvas');
+    const scaledCanvas = document.createElement('canvas');
     scaledCanvas.width = scaledWidth;
     scaledCanvas.height = scaledHeight;
 
-    var scaledCtx = scaledCanvas.getContext('2d');
+    const scaledCtx = scaledCanvas.getContext('2d');
     scaledCtx.drawImage(
         canvas,
         0, 0,
@@ -398,8 +398,8 @@ var builder = (function() {
    * @return {Body} The first body in the world colliding with the given body
    */
   Builder.prototype.getCollidingBody = function(body) {
-    for (var i = 0; i < this.world.bodies.length; i++) {
-      var contacts = physics.collide(this.world.bodies[i], body);
+    for (let i = 0; i < this.world.bodies.length; i++) {
+      const contacts = physics.collide(this.world.bodies[i], body);
       if (contacts.length > 0) {
         return this.world.bodies[i];
       }
@@ -412,9 +412,9 @@ var builder = (function() {
    * @return {object} The view of the given body
    */
   Builder.prototype.highlightView = function(body) {
-    for (var i = 0; i < this.views.length; i++) {
+    for (let i = 0; i < this.views.length; i++) {
       if (this.views[i].body == body) {
-        var highlightedView = this.views[i];
+        const highlightedView = this.views[i];
         this.views[i] = this.views[this.views.length - 1];
         this.views[this.views.length - 1] = highlightedView;
         return highlightedView;
@@ -457,12 +457,12 @@ var builder = (function() {
   BoxView.GREY = BoxView.COLOURS.length - 1;
 
   BoxView.prototype.draw = function(ctx) {
-    var width = this.body.shape.size.x;
-    var height = this.body.shape.size.y;
+    const width = this.body.shape.size.x;
+    const height = this.body.shape.size.y;
 
     ctx.save();
 
-    var colours = BoxView.COLOURS[this.invalid ? BoxView.GREY : this.colour];
+    const colours = BoxView.COLOURS[this.invalid ? BoxView.GREY : this.colour];
     ctx.lineWidth = this.selected ? 3 : 1;
     ctx.strokeStyle = this.selected ? '#111' : colours.border;
     ctx.fillStyle = colours.fill;
@@ -512,7 +512,7 @@ var builder = (function() {
    * @return {object} A view for the body
    */
   function createView(body) {
-    var shape = Object.getPrototypeOf(body.shape).constructor;
+    const shape = Object.getPrototypeOf(body.shape).constructor;
     if (shape === physics.Box) {
       return new BoxView(body);
     } else if (shape === physics.Circle) {
@@ -525,9 +525,9 @@ var builder = (function() {
    * @return {boolean} If the browser supports the functionality we need.
    */
   function isSupported_() {
-    var canvas = document.createElement('canvas');
-    var supportsCanvas = !!(canvas.getContext);
-    var supportsCors = !!('withCredentials' in new XMLHttpRequest());
+    const canvas = document.createElement('canvas');
+    const supportsCanvas = !!(canvas.getContext);
+    const supportsCors = !!('withCredentials' in new XMLHttpRequest());
     return supportsCanvas
         && (supportsCors || !window.google); // Only necessary for G+
   }
@@ -560,7 +560,7 @@ var builder = (function() {
    * @return {string} Id of the world to load, taken from the page
    */
   function getWorldIdToLoad_() {
-    var worldHash = window.location.hash;
+    const worldHash = window.location.hash;
     if (worldHash) {
       return worldHash.substring(1);
     }
@@ -590,7 +590,7 @@ var builder = (function() {
 
     addAjaxAnimations_();
 
-    var worldId = getWorldIdToLoad_();
+    const worldId = getWorldIdToLoad_();
     if (worldId) {
       $.ajax({
         url: builder.baseUrl + 'worlds/data/' + worldId,
